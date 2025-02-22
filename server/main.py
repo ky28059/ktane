@@ -195,7 +195,6 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
             if lobby_info["manual_in"] and lobby_info["coder_in"]:
                 break
 
-
     else:
         while True:
             print("Make sure config is there")
@@ -214,7 +213,6 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
 
         
     await websocket.send_json({"type": "start", "end_time": lobby_info["exp"]})
-
     await websocket.send_json({"type": "config", "data": config})
 
     DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"config": config}})
