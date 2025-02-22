@@ -2,6 +2,7 @@
 
 @theme {
     --color-editor: #1e1e1e;
+    --color-filebar: rgb(20, 20, 20);
 }
 
 @utility container {
