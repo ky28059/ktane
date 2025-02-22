@@ -1,5 +1,7 @@
-def sum_list(a: list) -> int:
+def check(a: list) -> int:
     return sum(a)
+
+NAME = "sum_list"
 
 def get_template() -> str:
     return """

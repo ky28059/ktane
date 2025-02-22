@@ -1,5 +1,7 @@
-def concat_strings(a: str, b: str) -> str:
+def check(a: str, b: str) -> str:
     return f'{a}{b}'
+
+NAME = "concat_strings"
 
 def get_template() -> str:
     return """

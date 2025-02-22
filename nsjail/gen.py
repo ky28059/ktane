@@ -1,20 +1,16 @@
-from enum import Enum
 from random import randint
-from pathlib import Path
+from consts import TESTS_PATH, EASY_TEST_COUNT, RANGE, MEDIUM_TEST_COUNT, HARD_TEST_COUNT, Difficulty
 from pprint import pprint
 
-RANGE = 100
-TESTS_PATH = Path("tests")
-EASY_TEST_COUNT = 10
-
-class Difficulty(str, Enum):
-    EASY = 'easy'
-    MEDIUM = 'medium'
-    HARD = 'hard'
-
-def generate(d: Difficulty) -> tuple[tuple[str, int], str]:
-    n = randint(0, EASY_TEST_COUNT - 1)
-    return ((d.value, n), __import__(f'{TESTS_PATH.name}.{d.value}._{n}', fromlist=["get_template"]).get_template())
+def generate(d: Difficulty) -> tuple[tuple[str, int, str], str]:
+    if d == Difficulty.EASY:
+        n = randint(0, EASY_TEST_COUNT - 1)
+    elif d == Difficulty.MEDIUM:
+        n = randint(0, MEDIUM_TEST_COUNT - 1)
+    else:
+        n = randint(0, HARD_TEST_COUNT - 1)
+    test_case = __import__(f'{TESTS_PATH.name}.{d.value}._{n}', fromlist=["get_template", "NAME"])
+    return ((d.value, n, test_case.NAME), test_case.get_template())
 
 
 def generate_template(difficulty: Difficulty, num: int) -> dict:
@@ -22,7 +18,7 @@ def generate_template(difficulty: Difficulty, num: int) -> dict:
     generates num testcases of difficulty difficulty
     """
     template = {
-        "nums": [],
+        "nums": {},
         "template": ""
     }
     weights = [0, 0] # hard, medium
@@ -30,7 +26,7 @@ def generate_template(difficulty: Difficulty, num: int) -> dict:
         weights = [0.1, 0.8]
     elif difficulty == Difficulty.HARD:
         weights = [0.7, 1]
-    for _ in range(num):
+    for i in range(num):
         r = randint(0, RANGE)
         if r < weights[0] * RANGE:
             test_num, test_content = generate(Difficulty.HARD)
@@ -38,9 +34,11 @@ def generate_template(difficulty: Difficulty, num: int) -> dict:
             test_num, test_content = generate(Difficulty.MEDIUM)
         else:
             test_num, test_content = generate(Difficulty.EASY)
-        template["nums"].append(test_num)
+        template["nums"][str(i)] = (test_num)
         template["template"] += test_content + "\n"
     
     return template
-    
-pprint(generate_template(Difficulty.EASY, 5))
+
+if __name__ == "__main__":
+    template = generate_template(Difficulty.EASY, 2)
+    pprint(template)

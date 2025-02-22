@@ -1,5 +1,7 @@
-def sub_two_numbers(a: int, b: int):
+def check(a: int, b: int) -> int:
     return a - b
+
+NAME = "sub_two_numbers"
 
 def get_template() -> str:
     return """

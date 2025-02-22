@@ -1,5 +1,7 @@
-def all_capital_letters(a: str) -> bool:
+def check(a: str) -> bool:
     return a == a.upper()
+
+NAME = "all_capital_letters"
 
 def get_template() -> str:
     return """
