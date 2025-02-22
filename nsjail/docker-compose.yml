@@ -1,0 +1,6 @@
+services:
+  nsjail-runner:
+    build: .
+    ports:
+      - 5001:5001
+    privileged: true

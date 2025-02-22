@@ -1,4 +1,6 @@
-from consts import TESTS_PATH, EASY_TEST_COUNT, Difficulty, MEDIUM_TEST_COUNT, HARD_TEST_COUNT, NUM_TEST_CASES
+#!/usr/local/bin/python3
+
+from consts import TESTS_PATH, Difficulty, NUM_TEST_CASES
 from random import randint, shuffle, uniform
 from secrets import token_hex
 
