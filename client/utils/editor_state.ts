@@ -73,6 +73,16 @@ export function delete_char(buffer: BufferState) {
     }
 }
 
+export function backspace(buffer: BufferState) {
+    if (buffer.cursor.x === 0 && buffer.cursor.y === 0) {
+        // can't backspace at start, so that is checked first
+        return;
+    }
+
+    move_cursor(buffer, -1, 0);
+    delete_char(buffer);
+}
+
 // make the cursor in bounds in case it is out of bounds
 export function constrain_cursor(buffer: BufferState) {
     if (buffer.cursor.y < 0) {
@@ -99,6 +109,38 @@ export function constrain_cursor(buffer: BufferState) {
         }
 
         buffer.cursor.y = Math.min(buffer.lines.length - 1, buffer.cursor.y);
+    }
+}
+
+export function move_cursor(buffer: BufferState, x_offset: number, y_offset: number) {
+    const cursor = buffer.cursor;
+
+    cursor.y += y_offset;
+    if (cursor.y >= buffer.lines.length) {
+        cursor.y = buffer.lines.length - 1;
+        cursor.x = buffer_current_line(buffer).length;
+    } else if (cursor.y < 0) {
+        cursor.y = 0;
+        cursor.x = 0;
+    }
+
+    cursor.x = Math.min(cursor.x, buffer_current_line(buffer).length);
+
+    cursor.x += x_offset;
+    if (cursor.x > buffer_current_line(buffer).length) {
+        if (cursor.y < buffer.lines.length - 1) {
+            cursor.x = 0;
+            cursor.y += 1;
+        } else {
+            cursor.x = buffer_current_line(buffer).length;
+        }
+    } else if (cursor.x < 0) {
+        if (cursor.y > 0) {
+            cursor.y -= 1;
+            cursor.x = buffer_current_line(buffer).length;
+        } else {
+            cursor.x = 0;
+        }
     }
 }
 
