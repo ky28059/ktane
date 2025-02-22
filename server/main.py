@@ -5,6 +5,8 @@ import secrets
 from db.connections import *    # Is this bad?
 from utils import *
 import asyncio
+import time
+
 
 
 DB_COLLECTIONS = get_collections()
@@ -81,7 +83,7 @@ async def get_lobby():
 
         try:
             # Initialize with empty data
-            DB_COLLECTIONS["lobbies"].insert_one({"lobby_id": lobby_id, "config": {}})
+            DB_COLLECTIONS["lobbies"].insert_one({"lobby_id": lobby_id, "config": {}, "manual_in": False, "coder_in": False, "locked": False})
             return JSONResponse(content={"lobby_id": lobby_id})
         except Exception as e:
             logging.error(str(e))
@@ -90,11 +92,51 @@ async def get_lobby():
 
 @app.websocket("/ws/{lobby_id}")
 async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
-    if not DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id}):
-        await websocket.close(code=1008, reason="Invalid lobby_id?!")
-        return
+    # Scuffed while loop for locking the db
+    lobby_info = None
+    while True:
+        lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
+        if not lobby_info:
+            await websocket.close(code=1008, reason="Invalid lobby_id?!")
+            return
+        
+        # Handle case 2 players in already
 
+        if lobby_info["manual_in"] == True and lobby_info["coder_in"] == True:
+            await websocket.close(code=1008, reason="Lobby is full, bye bye!")
+            return
+        if lobby_info["locked"] == True:
+            continue
+        else:
+            DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"locked": True}})
+            break
+    
     await websocket.accept()
+
+    my_role = 0
+
+    # If someone already assumes a role, you take the other one
+    if lobby_info["manual_in"] == True:
+        my_role = 1
+
+        # Update the database
+
+        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"coder_in": True}})
+
+    elif lobby_info["coder_in"] == True:
+        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"manual_in": True}})
+    else:
+        my_role = int(time.time()) % 2
+        if my_role == 0:
+            DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"manual_in": True}})
+        else:
+            DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"coder_in": True}})
+
+    # Release the manual lock
+
+    DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"locked": False}})
+
+    # ---- That is end of locking code
     
     # Kevin said just send it once
 
