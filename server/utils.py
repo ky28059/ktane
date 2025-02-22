@@ -5,6 +5,8 @@ from enum import IntEnum, StrEnum
 import string
 from dataclasses import dataclass
 
+NSJAIL_HOST = "http://nsjail:5001/"
+
 POSSIBLE_MODES = [
     "square",
     "cycloid",
@@ -115,13 +117,23 @@ def serialize_document(doc):
     return doc
 
 def submit_testcase(data: dict):
-    # TODO: Send code and test case to nsjail server
-    pass
+    r = requests.post(NSJAIL_HOST + "run", json=data)
+    if r.status_code != 200:
+        return {"cooked": True}
+    return r.json()
 
-def grab_test_data():
-    # TODO: request nsjail for code, template, test
-
-    return {"implemented": False}
+def grab_test_data(diff, num=5):
+    diffmap = ['easy', 'medium', 'hard']
+    diffString = diffmap[diff]
+    r = requests.post(NSJAIL_HOST + "gen", json={
+        "difficulty": diffString,
+        "num": num
+    })
+    
+    if r.status_code != 200:
+        return {"cooked": True}
+    result = r.json() # No error handling 
+    return result
 
 if __name__ == '__main__':
     print(generate_bind(Difficulty.MEDIUM))

@@ -194,7 +194,7 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
 
     DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"config": config}})
 
-    code_data = grab_test_data()
+    code_data = grab_test_data(lobby_info["difficulty"])
 
     # TODO: ensure kevin handles this 
 
@@ -223,7 +223,8 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
             data = await asyncio.wait_for(websocket.receive_json(), timeout=1.0)
 
             if data["state"] == "submitted":
-                result = submit_testcase(data["code"])
+                code_data["code"] = data["code"]
+                result = submit_testcase(code_data)
                 logging.info(f"Testcase submitted: {result}")
 
                 # Write to the database
