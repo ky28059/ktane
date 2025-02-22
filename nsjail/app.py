@@ -26,7 +26,7 @@ def run():
     cmd = f'nsjail --config /app/nsjail.cfg -- /run/run.py {dict_fname} {code_fname}'
     try:
         output = {"tests": loads(check_output(cmd, shell=True, text=True)), "all_tests_failed": False}
-    except Exception as e:
+    except Exception:
         output = {"tests": {}, "all_tests_failed":  True}
     remove(CHROOT_DIR+dict_fname)
     remove(CHROOT_DIR+code_fname)
