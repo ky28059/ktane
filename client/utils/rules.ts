@@ -55,7 +55,7 @@ export type RuleAndTrigger = Rule & {
 
 // when an even occurs, we look in the rulebook to determine what rules to run for given event
 export type Rulebook = {
-    // string represnets key and ctrl and alt modifier keys
+    // string represents key and ctrl and alt modifier keys
     keypress_rules: Record<string, Rule[]>,
     event_rules: Rule[],
 }
