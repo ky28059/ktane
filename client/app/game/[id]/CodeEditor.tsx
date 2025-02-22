@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 // Components
 import SyntaxHighlighter from '@/components/SyntaxHighlighter';
 import FileBar from '@/app/game/[id]/FileBar';
+import { BinaryOp, event_to_keystring, parse_config, run_keypress_rules, StateValue } from '@/utils/rules';
+import { BgColor, get_current_file, type_chars, type EditorState } from '@/utils/editor_state';
 
 
 export default function CodeEditor() {
@@ -13,12 +15,32 @@ export default function CodeEditor() {
     const files = ['test.py', 'two.py', 'runner.py'];
     const [selected, setSelected] = useState(files[0]);
 
+    const [editorState, setEditorState] = useState<EditorState | null>(parse_config(
+        {'code': "def main():\n    print('hello world')", 'modes': ['square', 'circle', 'rhombus', 'pyramid', 'circle', 'square'], 'initial_mode': 'pyramid', 'initial_color': BgColor.Purple, 'serial_number': 'ZmRLcY08Bm6X', 'total_time': 110, 'rules': [{'trigger': {'type': 'keypress', 'keypress': '-KeyA'}, 'test': {'type': 'bin_op', 'op_type': BinaryOp.Equals, 'lhs': {'type': 'state_value', 'val': StateValue.Background}, 'rhs': {'type': 'literal', 'val': 'purple'}}, 'action': {'type': 'type_chars', 'characters': 'lmao u suck'}}]}
+    ));
+
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             e.preventDefault();
 
-            // JACK: edit below this line!!!
-            console.log(e.code, e.altKey, e.ctrlKey, e.shiftKey, e.metaKey);
+            setEditorState((editorState) => {
+                if (!editorState) {
+                    return null;
+                }
+
+                const keyString = event_to_keystring(e);
+                const newState = structuredClone(editorState);
+
+                if (!run_keypress_rules(newState, keyString)) {
+                    const buffer = get_current_file(newState).buffer;
+                    if (e.key.length === 1) {
+                        type_chars(buffer, e.key);
+                    }
+                }
+                const buffer = get_current_file(newState).buffer;
+
+                return newState;
+            });
         }
 
         window.addEventListener('keypress', handler);
@@ -45,7 +67,7 @@ export default function CodeEditor() {
                 */}
 
                 <SyntaxHighlighter language="python">
-                    {code}
+                    {editorState ? get_current_file(editorState).buffer.lines.join('\n') : ''}
                 </SyntaxHighlighter>
             </div>
 

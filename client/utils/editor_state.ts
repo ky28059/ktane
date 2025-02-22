@@ -25,7 +25,7 @@ function type_chars_no_newline(buffer: BufferState, chars: string) {
 
     const line = buffer.lines[buffer.cursor.y];
     buffer.lines[buffer.cursor.y] = line.slice(0, buffer.cursor.x) + chars + line.slice(buffer.cursor.x);
-    buffer.cursor.y += chars.length;
+    buffer.cursor.x += chars.length;
 }
 
 function type_newline(buffer: BufferState) {

@@ -84,16 +84,18 @@ function rulebook_from_rule_list(rules: RuleAndTrigger[]): Rulebook {
     return rulebook;
 }
 
-export function run_keypress_rules(state: EditorState, keypress: string) {
+export function run_keypress_rules(state: EditorState, keypress: string): boolean {
     const rule_eval_context = {
         editor_state: state,
         buffer: get_current_file(state).buffer,
     };
 
     state.rulebook.keypress_rules[keypress]?.forEach(rule => eval_rule(rule_eval_context, rule));
+
+    return state.rulebook.keypress_rules[keypress] !== undefined
 }
 
-export function run_evenr_rule(state: EditorState) {
+export function run_event_rule(state: EditorState) {
     const rule_eval_context = {
         editor_state: state,
         buffer: get_current_file(state).buffer,
@@ -107,6 +109,24 @@ export function run_evenr_rule(state: EditorState) {
 export type KeypressTrigger = {
     type: 'keypress'
     keypress: string,
+}
+
+// converts keyboard event to keystring
+export function event_to_keystring(event: KeyboardEvent) {
+    let out = "";
+    if (event.ctrlKey) {
+        out += "C";
+    }
+
+    if (event.shiftKey) {
+        out += "S";
+    }
+
+    if (event.altKey) {
+        out += "A";
+    }
+
+    return out + "-" + event.code;
 }
 
 // one event is randomly picked every so often
