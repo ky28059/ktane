@@ -154,12 +154,11 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
         # Update the database
 
         DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"coder_in": True}})
-
-        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"exp": int(time.time())}})
+        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"exp": int((time.time() + 300) * 1000)}})
 
     elif lobby_info["coder_in"] == True:
         DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"manual_in": True}})
-        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"exp": int(time.time())}})
+        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"exp": int((time.time() + 300) * 1000)}})
 
     else:
         first = True

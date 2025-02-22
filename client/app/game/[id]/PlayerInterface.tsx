@@ -56,7 +56,7 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
         if (!config) return;
 
         const id = setInterval(() => {
-            const newTime = DateTime.now().diff(endDate.current);
+            const newTime = endDate.current.diff(DateTime.now());
 
             if (newTime < Duration.fromMillis(1000 * 60) && !alarmPlayed.current) {
                 void alarmRef.current?.play();
