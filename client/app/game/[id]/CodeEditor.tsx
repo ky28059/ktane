@@ -20,7 +20,7 @@ export default function CodeEditor(props: CodeEditorProps) {
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             e.preventDefault();
-            console.log(e.key)
+            console.log(e.code);
 
             setEditorState((editorState) => {
                 const keyString = event_to_keystring(e);
@@ -32,7 +32,6 @@ export default function CodeEditor(props: CodeEditorProps) {
                         type_chars(buffer, e.key);
                     }
                 }
-                const buffer = get_current_file(newState).buffer;
 
                 return newState;
             });

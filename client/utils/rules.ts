@@ -37,12 +37,12 @@ export function parse_config(config: GameConfig): EditorState {
 
 export type Rule = {
     // if test returns true, perform action
-    test: Expr,
+    test?: Expr,
     action: Action,
 }
 
 function eval_rule(state: RuleEvalContext, rule: Rule) {
-    if (eval_expr(state, rule.test) === true) {
+    if (!rule.test || eval_expr(state, rule.test) === true) {
         do_action(state, rule.action);
     }
 }

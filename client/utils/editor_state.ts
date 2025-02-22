@@ -75,16 +75,31 @@ export function delete_char(buffer: BufferState) {
 
 // make the cursor in bounds in case it is out of bounds
 export function constrain_cursor(buffer: BufferState) {
+    if (buffer.cursor.y < 0) {
+        buffer.cursor.y = 0;
+        buffer.cursor.x = 0;
+    } else if (buffer.cursor.y >= buffer.lines.length) {
+        buffer.cursor.y = buffer.lines.length - 1;
+        buffer.cursor.x = buffer_current_line(buffer).length;
+    }
+
     if (buffer.cursor.x < 0) {
         buffer.cursor.y -= 1;
         buffer.cursor.x = 0;
+
+        buffer.cursor.y = Math.max(0, buffer.cursor.y);
     } else if (buffer.cursor.x > buffer_current_line(buffer).length) {
-        // it is ok for cursor to equal end of line
-        buffer.cursor.y += 1;
-        buffer.cursor.x = 0;
+        if (buffer.cursor.y === buffer.lines.length - 1) {
+            // last line, dont wrap x to 0, just constrain it
+            buffer.cursor.x === buffer_current_line(buffer).length;
+        } else {
+            // it is ok for cursor to equal end of line
+            buffer.cursor.y += 1;
+            buffer.cursor.x = 0;
+        }
+
+        buffer.cursor.y = Math.min(buffer.lines.length - 1, buffer.cursor.y);
     }
-    
-    buffer.cursor.y = Math.min(Math.max(0, buffer.cursor.y), buffer.lines.length);
 }
 
 export type OpenFile = {
