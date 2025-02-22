@@ -14,6 +14,10 @@ export type BufferState = {
     mode: Mode,
 }
 
+function buffer_current_line(buffer: BufferState) {
+    return buffer.lines[buffer.cursor.y];
+}
+
 function type_chars_no_newline(buffer: BufferState, chars: string) {
     if (buffer.lines.length === buffer.cursor.y) {
         buffer.lines.push('');
@@ -49,6 +53,19 @@ export function type_chars(buffer: BufferState, chars: string) {
 
         type_chars_no_newline(buffer, parts[i]);
     }
+}
+
+// make the cursor in bounds in case it is out of bounds
+export function constrain_cursor(buffer: BufferState) {
+    if (buffer.cursor.x < 0) {
+        buffer.cursor.y -= 1;
+        buffer.cursor.x = 0;
+    } else if (buffer.cursor.x >= buffer_current_line(buffer).length) {
+        buffer.cursor.y += 1;
+        buffer.cursor.x = 0;
+    }
+    
+    buffer.cursor.y = Math.min(Math.max(0, buffer.cursor.y), buffer.lines.length);
 }
 
 export type OpenFile = {

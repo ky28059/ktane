@@ -1,4 +1,4 @@
-import { EditorState, BgColor, Mode, BufferState, get_current_file, type_chars } from "./editor_state";
+import { EditorState, BgColor, Mode, BufferState, get_current_file, type_chars, constrain_cursor } from "./editor_state";
 
 // game config returned from server
 export type GameConfig = {
@@ -335,6 +335,7 @@ function do_action(state: RuleEvalContext, action: Action) {
         case 'move_cursor':
             buffer.cursor.x += action.x_offset;
             buffer.cursor.y += action.y_offset;
+            constrain_cursor(buffer);
             break;
     }
 }

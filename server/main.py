@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 import json
 import secrets
@@ -11,6 +11,7 @@ DB_COLLECTIONS = get_collections()
 
 app = FastAPI()
 
+# Insane amount of debugging routes just to be
 @app.get("/dumpall")
 async def dump_all():
     """Dump all collections in the database."""
@@ -18,6 +19,18 @@ async def dump_all():
     for name, collection in DB_COLLECTIONS.items():
         result[name] = [serialize_document(doc) for doc in collection.find({})]
     return result
+
+
+@app.post("/emptydb")
+async def empty_db():
+    """Delete all documents from all collections in the database."""
+    try:
+        for name, collection in DB_COLLECTIONS.items():
+            collection.delete_many({})  # Deletes all documents in the collection
+        return {"message": "All collections emptied successfully"}
+    except Exception as e:
+        logging.error(f"Error emptying database: {e}")
+        raise HTTPException(status_code=500, detail="Failed to empty the database")
 
 html = """
 <!DOCTYPE html>
@@ -90,6 +103,9 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
 
     DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"config": config}})
 
+    code_data = grab_test_data()
+    await websocket.send_json(code_data)
+
     while True:
         data = await websocket.receive_text()
         parsed_data = json.loads(data)
@@ -105,4 +121,7 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
             logging.info(f"Testcase submitted: {result}")
             await websocket.send_json(result)
             await websocket.close(code=1000)
+
+            # Purge the lobby after submission
+            DB_COLLECTIONS["lobbies"].delete_many({"lobby_id": lobby_id})
             break
