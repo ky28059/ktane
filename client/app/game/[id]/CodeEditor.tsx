@@ -44,7 +44,7 @@ export default function CodeEditor(props: CodeEditorProps) {
     const file = get_current_file(editorState);
 
     const code = file.buffer.lines
-        .map((s, i) => i === file.buffer.cursor.y ? (s.slice(0, file.buffer.cursor.x) + '█' + s.slice(file.buffer.cursor.x)) : s)
+        .map((s, i) => i === file.buffer.cursor.y ? (s.slice(0, file.buffer.cursor.x) + '█' + s.slice(Math.max(file.buffer.cursor.x + 1, 0))) : s)
         .join('\n')
 
     return (
