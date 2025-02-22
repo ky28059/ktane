@@ -202,7 +202,7 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
             await asyncio.sleep(0.5)  # Use asyncio.sleep instead of time.sleep
             lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
             pprint(lobby_info)
-            if config in lobby_id:
+            if "config" in lobby_info:
                 break
 
     # Then I start sending
