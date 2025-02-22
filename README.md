@@ -6,8 +6,6 @@
 
 Then fastapi should be on 8000
 
-### IF KEVIN DOES NOT READ THE CODE LOL
+### IF KEVIN DOES NOT KNOW HOW TO BUILD
 
-After the handshake, one message should contain the Jack keybind typeshi, and one should be test data + code template
-
-Actual schema really depends on Jack and Neil heheheha
+`docker build -t backend . && docker run -p 8000:8000 backend`
