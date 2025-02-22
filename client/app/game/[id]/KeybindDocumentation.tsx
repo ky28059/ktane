@@ -50,7 +50,8 @@ function actionToString(a: Action): string {
         case 'change_mode': return `Changes the current mode to \`${a.mode}\`.`;
         case 'type_chars': return `Types the character(s) \`${a.characters}\`.`;
         case 'delete': return 'Deletes the character at the cursur.';
-        case 'action_list': return a.actions.map(actionToString).join(', ')
+        case 'backspace': return 'Deletes the character to the left of the cursor.';
+        case 'action_list': return a.actions.map(actionToString).join(', ');
     }
 }
 

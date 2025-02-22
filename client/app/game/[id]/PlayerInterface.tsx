@@ -37,6 +37,10 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
                 'action': {'type': 'delete'},
             },
             {
+                'trigger': {'type': 'keypress', 'keypress': '-Backspace'},
+                'action': {'type': 'backspace'},
+            },
+            {
                 'trigger': {'type': 'keypress', 'keypress': '-ArrowUp'},
                 'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': -1},
             },
@@ -55,7 +59,7 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
             {
                 'trigger': {'type': 'keypress', 'keypress': '-Tab'},
                 'action': {'type': 'type_chars', 'characters': '    '},
-            }
+            },
         ]
     });
 
