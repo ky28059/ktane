@@ -7,22 +7,21 @@ import SyntaxHighlighter from '@/components/SyntaxHighlighter';
 import FileBar from '@/app/game/[id]/FileBar';
 
 // Utils
-import { BinaryOp, event_to_keystring, parse_config, run_keypress_rules, StateValue } from '@/utils/rules';
-import { BgColor, get_current_file, type_chars, type EditorState } from '@/utils/editor_state';
+import { event_to_keystring, GameConfig, parse_config, run_keypress_rules } from '@/utils/rules';
+import { get_current_file, type_chars } from '@/utils/editor_state';
 
 
-export default function CodeEditor() {
-    const [editorState, setEditorState] = useState<EditorState | null>(parse_config(
-        {'code': "def main():\n    print('hello world')", 'modes': ['square', 'circle', 'rhombus', 'pyramid', 'circle', 'square'], 'initial_mode': 'pyramid', 'initial_color': BgColor.Purple, 'serial_number': 'ZmRLcY08Bm6X', 'total_time': 110, 'rules': [{'trigger': {'type': 'keypress', 'keypress': '-KeyA'}, 'test': {'type': 'bin_op', 'op_type': BinaryOp.Equals, 'lhs': {'type': 'state_value', 'val': StateValue.Background}, 'rhs': {'type': 'literal', 'val': 'purple'}}, 'action': {'type': 'type_chars', 'characters': 'lmao u suck'}}]}
-    ));
+type CodeEditorProps = {
+    config: GameConfig
+}
+export default function CodeEditor(props: CodeEditorProps) {
+    const [editorState, setEditorState] = useState(parse_config(props.config));
 
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             e.preventDefault();
 
             setEditorState((editorState) => {
-                if (!editorState) return null;
-
                 const keyString = event_to_keystring(e);
                 const newState = structuredClone(editorState);
 
@@ -41,10 +40,6 @@ export default function CodeEditor() {
         window.addEventListener('keypress', handler);
         return () => window.removeEventListener('keypress', handler);
     }, []);
-
-    if (!editorState) return ( // TODO
-        <div>loading...</div>
-    );
 
     const file = get_current_file(editorState);
 
