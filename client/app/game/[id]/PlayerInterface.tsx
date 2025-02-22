@@ -26,7 +26,7 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     )
 
     if (props.id === '333') return (
-        <ManualPlayerInterface />
+        <ManualPlayerInterface config={config} />
     )
 
     return (

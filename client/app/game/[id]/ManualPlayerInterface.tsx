@@ -1,8 +1,11 @@
 import KeybindDocumentation from '@/app/game/[id]/KeybindDocumentation';
-import { RuleAndTrigger } from '@/utils/rules';
+import type { GameConfig } from '@/utils/rules';
 
 
-export default function ManualPlayerInterface() {
+type ManualPlayerInterfaceProps = {
+    config: GameConfig
+}
+export default function ManualPlayerInterface(props: ManualPlayerInterfaceProps) {
     return (
         <div className="bg-gray-200">
             <div className="container font-serif py-16 max-w-6xl bg-white border-x border-black/20">
@@ -79,8 +82,9 @@ export default function ManualPlayerInterface() {
                     The following keybinds relate to inputting characters:
                 </p>
 
-                <KeybindDocumentation {...rule} />
-                <KeybindDocumentation {...rule} />
+                {props.config.rules.map((r) => (
+                    <KeybindDocumentation {...r} key={JSON.stringify(r)} />
+                ))}
 
                 <h2 className="font-bold text-xl mt-12 mb-5" id="nav">
                     3. Navigation
@@ -89,73 +93,40 @@ export default function ManualPlayerInterface() {
                     The following keybinds relate to navigating around the currently edited document:
                 </p>
 
-                <KeybindDocumentation {...rule} />
-                <KeybindDocumentation {...rule} />
-                <KeybindDocumentation {...rule} />
+                {props.config.rules.map((r) => (
+                    <KeybindDocumentation {...r} key={JSON.stringify(r)} />
+                ))}
 
                 <h2 className="font-bold text-xl mt-12 mb-5" id="bg">
                     4. Background color
                 </h2>
                 <p className="mb-5">
                     Some Scame keybinds automatically enable based on your background color. By default, your background
-                    color is <code className="bg-gray-200 rounded px-1.5 py-0.5 text-sm">{res.initial_color}</code>.
+                    color is <code className="bg-gray-200 rounded px-1.5 py-0.5 text-sm">{props.config.initial_color}</code>.
                 </p>
                 <p className="mb-8">
                     The following keybinds relate to changing the current background color:
                 </p>
 
-                <KeybindDocumentation {...rule} />
-                <KeybindDocumentation {...rule} />
+                {props.config.rules.map((r) => (
+                    <KeybindDocumentation {...r} key={JSON.stringify(r)} />
+                ))}
 
                 <h2 className="font-bold text-xl mt-12 mb-5" id="mode">
                     5. Mode
                 </h2>
                 <p className="mb-5">
-                    Scame contains {res.modes.length} unique editing modes: <code className="bg-gray-200 rounded px-1.5 py-0.5 text-sm">{res.modes.join(', ')}</code>.
-                    By default, your mode is set to <code className="bg-gray-200 rounded px-1.5 py-0.5 text-sm">{res.initial_mode}</code>.
+                    Scame contains {props.config.modes.length} unique editing modes: <code className="bg-gray-200 rounded px-1.5 py-0.5 text-sm">{props.config.modes.join(', ')}</code>.
+                    By default, your mode is set to <code className="bg-gray-200 rounded px-1.5 py-0.5 text-sm">{props.config.initial_mode}</code>.
                 </p>
                 <p className="mb-8">
                     The following keybinds relate to changing the current mode:
                 </p>
 
-                <KeybindDocumentation {...rule} />
-                <KeybindDocumentation {...rule} />
+                {props.config.rules.map((r) => (
+                    <KeybindDocumentation {...r} key={JSON.stringify(r)} />
+                ))}
             </div>
         </div>
     )
 }
-
-const res = {
-    code: "def main()\nprint('hello world')",
-    modes: ["square", "cycloid", "taurus"],
-    initial_mode: "square",
-    initial_color: "purple",
-    serial_number: "27ha20vla",
-    total_time: 300, // seconds
-    rules: [
-        {
-            trigger: {
-                type: "keypress",
-                keypress: "a",
-            },
-            test: {
-                type: "bin_op",
-                op_type: "equals",
-                lhs: {
-                    type: "state_value",
-                    val: "color",
-                },
-                rhs: {
-                    type: "literal",
-                    val: "purple",
-                }
-            },
-            action: {
-                type: "type_chars",
-                characters: "lmao u suck",
-            }
-        }
-    ]
-}
-
-const rule = res.rules[0] as RuleAndTrigger
