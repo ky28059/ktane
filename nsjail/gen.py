@@ -1,6 +1,5 @@
 from random import randint
 from consts import TESTS_PATH, EASY_TEST_COUNT, RANGE, MEDIUM_TEST_COUNT, HARD_TEST_COUNT, Difficulty
-from pprint import pprint
 
 def generate(d: Difficulty) -> tuple[tuple[str, int, str], str]:
     if d == Difficulty.EASY:
@@ -38,7 +37,3 @@ def generate_template(difficulty: Difficulty, num: int) -> dict:
         template["template"] += test_content + "\n"
     
     return template
-
-if __name__ == "__main__":
-    template = generate_template(Difficulty.EASY, 2)
-    pprint(template)
