@@ -4,7 +4,7 @@ import requests
 import json
 
 # Fetch the lobby ID from the server
-r = requests.get("http://localhost:8000/get-lobby")
+r = requests.post("http://localhost:8000/lobby", json={"difficulty": 0})
 lobby_id = r.json()["lobby_id"]
 print(f"[DEBUG]: lobby_id received is: {lobby_id}")
 
