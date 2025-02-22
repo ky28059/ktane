@@ -20,6 +20,7 @@ export default function CodeEditor(props: CodeEditorProps) {
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             e.preventDefault();
+            console.log(e.key)
 
             setEditorState((editorState) => {
                 const keyString = event_to_keystring(e);
@@ -37,20 +38,24 @@ export default function CodeEditor(props: CodeEditorProps) {
             });
         }
 
-        window.addEventListener('keypress', handler);
-        return () => window.removeEventListener('keypress', handler);
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
     }, []);
 
     const file = get_current_file(editorState);
 
+    const code = file.buffer.lines
+        .map((s, i) => i === file.buffer.cursor.y ? (s.slice(0, file.buffer.cursor.x) + '█' + s.slice(file.buffer.cursor.x)) : s)
+        .join('\n')
+
     return (
-        <div className="flex-grow flex flex-col">
+        <div className="flex-grow flex flex-col overflow-x-auto min-w-0">
             <FileBar
                 files={editorState.open_files.map((f) => f.filename)}
                 selected={file.filename}
             />
 
-            <div className="bg-editor relative flex-grow overflow-y-auto">
+            <div className="bg-editor relative flex-grow overflow-y-auto flex">
                 {/* Hack: invisible textarea to capture user input */}
                 {/*
                 <textarea
@@ -62,7 +67,7 @@ export default function CodeEditor(props: CodeEditorProps) {
                 */}
 
                 <SyntaxHighlighter language="python">
-                    {file.buffer.lines.join('\n')}
+                    {code}
                 </SyntaxHighlighter>
             </div>
 

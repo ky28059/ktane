@@ -1,6 +1,6 @@
 export default function Console() {
     return (
-        <div className="bg-black text-white w-[40vw] border-l border-white/25 p-4">
+        <div className="flex-none bg-black text-white w-[40vw] border-l border-white/25 p-4">
             <pre className="whitespace-pre-wrap text-sm">
                 {ex}
             </pre>
