@@ -53,3 +53,8 @@ def serialize_document(doc):
 def submit_testcase(data: dict):
     # TODO: Send code and test case to nsjail server
     pass
+
+def grab_test_data():
+    # TODO: request nsjail for code, template, test
+
+    return {"implemented": False}

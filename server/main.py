@@ -90,6 +90,9 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
 
     DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"config": config}})
 
+    code_data = grab_test_data()
+    await websocket.send_json(code_data)
+
     while True:
         data = await websocket.receive_text()
         parsed_data = json.loads(data)
