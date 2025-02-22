@@ -1,3 +1,5 @@
+import { Rulebook } from "./rules";
+
 export type BufferPosition = {
     x: number,
     y: number,
@@ -11,7 +13,6 @@ export type BufferState = {
     bg_color: BgColor,
     mode: Mode,
 }
-
 
 function type_chars_no_newline(buffer: BufferState, chars: string) {
     if (buffer.lines.length === buffer.cursor.y) {
@@ -71,6 +72,7 @@ export type EditorState = {
     buffer_index: number,
     serial_number: string,
     remaining_time: number,
+    rulebook: Rulebook,
 }
 
 export function get_current_file(state: EditorState): OpenFile {

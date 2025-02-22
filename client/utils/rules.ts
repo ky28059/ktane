@@ -1,8 +1,38 @@
 import { EditorState, BgColor, Mode, BufferState, get_current_file, type_chars } from "./editor_state";
 
+// game config returned from server
 export type GameConfig = {
-    initial_state: EditorState,
+    code: string,
+    modes: Mode[],
+    initial_mode: Mode,
+    initial_color: BgColor,
+    serial_number: string,
+    total_time: number,
     rules: RuleAndTrigger[],
+}
+
+export function parse_config(config: GameConfig): EditorState {
+    return {
+        open_files: [
+            {
+                filename: "main.py",
+                buffer: {
+                    lines: config.code.split('\n'),
+                    cursor: {
+                        x: 0,
+                        y: 0,
+                    },
+                    scroll_start: 0,
+                    bg_color: config.initial_color,
+                    mode: config.initial_mode,
+                }
+            },
+        ],
+        buffer_index: 0,
+        serial_number: config.serial_number,
+        remaining_time: config.total_time,
+        rulebook: rulebook_from_rule_list(config.rules),
+    };
 }
 
 export type Rule = {
@@ -31,7 +61,7 @@ export type Rulebook = {
     event_rules: Rule[],
 }
 
-export function rulebook_from_rule_list(rules: RuleAndTrigger[]): Rulebook {
+function rulebook_from_rule_list(rules: RuleAndTrigger[]): Rulebook {
     const rulebook: Rulebook = {
         keypress_rules: {},
         event_rules: [],
@@ -55,22 +85,22 @@ export function rulebook_from_rule_list(rules: RuleAndTrigger[]): Rulebook {
     return rulebook;
 }
 
-export function run_keypress_rules(state: EditorState, rulebook: Rulebook, keypress: string) {
+export function run_keypress_rules(state: EditorState, keypress: string) {
     const rule_eval_context = {
         editor_state: state,
         buffer: get_current_file(state).buffer,
     };
 
-    rulebook.keypress_rules[keypress]?.forEach(rule => eval_rule(rule_eval_context, rule));
+    state.rulebook.keypress_rules[keypress]?.forEach(rule => eval_rule(rule_eval_context, rule));
 }
 
-export function run_evenr_rule(state: EditorState, rulebook: Rulebook) {
+export function run_evenr_rule(state: EditorState) {
     const rule_eval_context = {
         editor_state: state,
         buffer: get_current_file(state).buffer,
     };
 
-    const rule = rulebook.event_rules[Math.floor(Math.random() * rulebook.event_rules.length)];
+    const rule = state.rulebook.event_rules[Math.floor(Math.random() * state.rulebook.event_rules.length)];
     eval_rule(rule_eval_context, rule);
 }
 
@@ -125,15 +155,20 @@ function context_get_buffer(context: RuleEvalContext): BufferState {
     return context.buffer ?? get_current_file(context.editor_state).buffer;
 }
 
+export type LiteralExpr = {
+    type: 'literal',
+    val: Value,
+}
+
 // expression that retreives a value from the state
 export enum StateValue {
-    Background,
-    LineNum,
-    ColumnNum,
-    Mode,
-    Filename,
-    Timer,
-    SerialNumber,
+    Background = 'background',
+    LineNum = 'line_num',
+    ColumnNum = 'column_num',
+    Mode = 'mode',
+    Filename = 'filename',
+    Timer = 'timer',
+    SerialNumber = 'serial_number',
 }
 
 export type StateValueExpr = {
@@ -231,10 +266,12 @@ export function eval_bin_op(context: RuleEvalContext, expr: BinOpExpr): Value {
     }
 }
 
-export type Expr = StateValueExpr | UnaryOpExpr | BinOpExpr
+export type Expr = LiteralExpr | StateValueExpr | UnaryOpExpr | BinOpExpr
 
 export function eval_expr(state: RuleEvalContext, expr: Expr): Value {
     switch (expr.type) {
+        case 'literal':
+            return expr.val;
         case 'state_value':
             return eval_state_value(state, expr);
         case 'unary_op':
