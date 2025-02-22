@@ -111,7 +111,7 @@ async def get_lobby(request: Request):
 
         try:
             # Initialize with empty data
-            DB_COLLECTIONS["lobbies"].insert_one({"lobby_id": lobby_id, "config": {}, "manual_in": False, "coder_in": False, "locked": False, "difficulty": json_data["difficulty"]})
+            DB_COLLECTIONS["lobbies"].insert_one({"lobby_id": lobby_id, "manual_in": False, "coder_in": False, "locked": False, "difficulty": json_data["difficulty"]})
             return JSONResponse(content={"lobby_id": lobby_id})
         except Exception as e:
             logging.error(str(e))
@@ -162,6 +162,8 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
 
     else:
         first = True
+        config = generate_bind(lobby_info["difficulty"]) # Assuming Jack is the GOAT no error
+        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"config": config}})
         my_role = int(time.time()) % 2
         if my_role == 0:
             DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"manual_in": True}})
@@ -187,21 +189,31 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
     if first:
         while True:
             print("Waiting for bro to connect")
-            await asyncio.sleep(2)  # Use asyncio.sleep instead of time.sleep
+            await asyncio.sleep(0.5)  # Use asyncio.sleep instead of time.sleep
             lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
             pprint(lobby_info)
             if lobby_info["manual_in"] and lobby_info["coder_in"]:
                 break
 
 
+    else:
+        while True:
+            print("Make sure config is there")
+            await asyncio.sleep(0.5)  # Use asyncio.sleep instead of time.sleep
+            lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
+            pprint(lobby_info)
+            if config in lobby_id:
+                break
 
     # Then I start sending
 
     lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
 
+    config = lobby_id["config"]
+
     pprint(lobby_info)
 
-    config = generate_bind(lobby_info["difficulty"]) # Assuming Jack is the GOAT no error
+        
     await websocket.send_json({"type": "start", "end_time": lobby_info["exp"]})
 
     await websocket.send_json({"type": "config", "data": config})
