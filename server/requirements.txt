@@ -1,0 +1,5 @@
+uvicorn
+fastapi
+requests
+python-dotenv
+pymongo
