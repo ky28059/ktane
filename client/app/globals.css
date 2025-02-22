@@ -1,3 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+    --color-editor: #252526;
+}
+
+@utility container {
+    margin-inline: auto;
+    padding-inline: 3rem;
+}
