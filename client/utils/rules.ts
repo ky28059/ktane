@@ -70,13 +70,13 @@ function rulebook_from_rule_list(rules: RuleAndTrigger[]): Rulebook {
         switch (rule.trigger.type) {
             case 'keypress':
                 if (rulebook.keypress_rules[rule.trigger.keypress]) {
-                    rulebook.keypress_rules[rule.trigger.keypress].push(rule.rule);
+                    rulebook.keypress_rules[rule.trigger.keypress].push(rule);
                 } else {
-                    rulebook.keypress_rules[rule.trigger.keypress] = [rule.rule];
+                    rulebook.keypress_rules[rule.trigger.keypress] = [rule];
                 }
                 break;
             case 'event_trigger':
-                rulebook.event_rules.push(rule.rule);
+                rulebook.event_rules.push(rule);
                 break;
         }
     }
@@ -159,7 +159,7 @@ export type LiteralExpr = {
     val: Value,
 }
 
-// expression that retreives a value from the state
+// expression that retrieves a value from the state
 export enum StateValue {
     Background = 'background',
     LineNum = 'line_num',
