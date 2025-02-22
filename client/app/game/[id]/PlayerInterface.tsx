@@ -17,7 +17,7 @@ type PlayerInterfaceProps = {
 export default function PlayerInterface(props: PlayerInterfaceProps) {
     const [config, setConfig] = useState<GameConfig | null>({
         'code': "def main():\n    print('hello world')",
-        'modes': ['square', 'circle', 'rhombus', 'pyramid', 'circle', 'square'],
+        'modes': ['square', 'circle', 'rhombus', 'pyramid', 'four leaf clover', 'canada'],
         'initial_mode': 'pyramid',
         'initial_color': BgColor.Purple,
         'serial_number': 'ZmRLcY08Bm6X',
@@ -60,11 +60,30 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     });
 
     useEffect(() => {
-        // TODO: ws logic goes here
+        const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_BASE!);
+
+        ws.addEventListener('message', (m: MessageEvent<BackendMessage>) => {
+            switch (m.data.type) {
+                case 'config': return setConfig(m.data.data);
+                case 'code_data': return // ...
+            }
+        });
     }, []);
 
+    const joinHref = new URL(`/game/${props.id}`, window.location.href).href;
+
     if (!config) return ( // TODO
-        <div>loading...</div>
+        <div className="bg-editor flex flex-col gap-2 items-center justify-center h-screen text-white">
+            {/* TODO: logo */}
+            <img
+                src="/assets/logo.png"
+                className="max-w-2xl"
+            />
+            <p>
+                This game hasn't started yet! Invite someone else to play at{' '}
+                <a href={joinHref} className="text-white/50 underline">{joinHref}</a>.
+            </p>
+        </div>
     )
 
     if (props.id === '333') return (
@@ -74,4 +93,16 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     return (
         <CodePlayerInterface config={config} />
     )
+}
+
+type BackendMessage = ConfigMessage | CodeDataMessage
+
+type ConfigMessage = {
+    type: 'config',
+    data: GameConfig
+}
+
+type CodeDataMessage = {
+    type: 'code_data',
+    data: {} // TODO
 }

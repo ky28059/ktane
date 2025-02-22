@@ -71,7 +71,7 @@ async def debug():
 
 @app.get("/get-lobby")
 async def get_lobby():
-    # Gen until we have a non-exisiting lobby, should not hang lol
+    # Gen until we have a non-existing lobby, should not hang lol
 
     while True:
         lobby_id = secrets.token_hex(10)
@@ -141,12 +141,12 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
     # Kevin said just send it once
 
     config = generate_bind()
-    await websocket.send_json(config)
+    await websocket.send_json({"type": "config", "data": config})
 
     DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"config": config}})
 
     code_data = grab_test_data()
-    await websocket.send_json(code_data)
+    await websocket.send_json({"type": "code_data", "data": code_data})
 
     while True:
         data = await websocket.receive_text()
