@@ -10,10 +10,14 @@ export default function KeybindDocumentation(props: RuleAndTrigger) {
                 {props.trigger.keypress}
             </code>
             <div className="text-sm">
-                <p className="font-bold">Active if:</p>
-                <p className="bg-gray-200 px-4 py-2 rounded mb-3">
-                    {exprToString(props.test)}
-                </p>
+                {props.test && (
+                    <>
+                        <p className="font-bold">Active if:</p>
+                        <p className="bg-gray-200 px-4 py-2 rounded mb-3">
+                            {exprToString(props.test)}
+                        </p>
+                    </>
+                )}
                 {/*
                 <table className="w-full border mb-3">
                     <tbody>
@@ -37,13 +41,16 @@ export default function KeybindDocumentation(props: RuleAndTrigger) {
     )
 }
 
-function actionToString(a: Action) {
+function actionToString(a: Action): string {
     switch (a.type) {
+        case 'die': return 'You die :(.';
         case 'submit': return 'Immediately deploys your code to prod.';
         case 'change_bg': return `Changes the background color to \`${a.color}\`.`;
         case 'move_cursor': return `Moves the cursor by \`(${a.x_offset}, ${a.y_offset})\`.`
         case 'change_mode': return `Changes the current mode to \`${a.mode}\`.`;
         case 'type_chars': return `Types the character(s) \`${a.characters}\`.`;
+        case 'delete': return 'Deletes the character at the cursur.';
+        case 'action_list': return a.actions.map(actionToString).join(', ')
     }
 }
 

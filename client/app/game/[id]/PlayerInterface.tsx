@@ -17,7 +17,7 @@ type PlayerInterfaceProps = {
 export default function PlayerInterface(props: PlayerInterfaceProps) {
     const [config, setConfig] = useState<GameConfig | null>({
         'code': "def main():\n    print('hello world')",
-        'modes': ['square', 'circle', 'rhombus', 'pyramid', 'circle', 'square'],
+        'modes': ['square', 'circle', 'rhombus', 'pyramid', 'four leaf clover', 'canada'],
         'initial_mode': 'pyramid',
         'initial_color': BgColor.Purple,
         'serial_number': 'ZmRLcY08Bm6X',
