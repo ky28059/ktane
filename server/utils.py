@@ -16,23 +16,21 @@ def generate_bind():
                     "type": "keypress",
                     "keypress": "a",
                 },
-                "rule": {
-                    "test": {
-                        "type": "bin_op",
-                        "op_type": "equals",
-                        "lhs": {
-                            "type": "state_value",
-                            "val": "color",
-                        },
-                        "rhs": {
-                            "type": "literal",
-                            "val": "purple",
-                        }
+                "test": {
+                    "type": "bin_op",
+                    "op_type": "equals",
+                    "lhs": {
+                        "type": "state_value",
+                        "val": "color",
                     },
-                    "action": {
-                        "type": "type_chars",
-                        "characters": "lmao u suck",
+                    "rhs": {
+                        "type": "literal",
+                        "val": "purple",
                     }
+                },
+                "action": {
+                    "type": "type_chars",
+                    "characters": "lmao u suck",
                 }
             }
         ]
