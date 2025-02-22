@@ -208,8 +208,7 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
     # Then I start sending
 
     lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
-
-    config = lobby_id["config"]
+    config = lobby_info["config"]
 
     pprint(lobby_info)
 

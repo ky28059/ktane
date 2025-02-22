@@ -70,35 +70,50 @@ def generate_bind(difficulty: Difficulty):
 
     # TODO: actual logic of keybind generation
     bind = {
-        "code": "def main()\nprint('hello world')",
-        "modes": modes,
-        "initial_mode": inital_mode,
-        "initial_color": str(initial_color),
-        "serial_number": serial_number,
-        "total_time": 120 - 10 * difficulty,  # seconds
-        "rules": [
+        'code': "def main():\n    print('hello world')",
+        'modes': modes,
+        'initial_mode': inital_mode,
+        'initial_color': initial_color,
+        'serial_number': serial_number,
+        'total_time': 110,
+        'rules': [
             {
-                "trigger": {
-                    "type": "keypress",
-                    "keypress": "C-KeyA",
-                },
-                "test": {
-                    "type": "bin_op",
-                    "op_type": "equals",
-                    "lhs": {
-                        "type": "state_value",
-                        "val": "color",
-                    },
-                    "rhs": {
-                        "type": "literal",
-                        "val": "purple",
-                    }
-                },
-                "action": {
-                    "type": "type_chars",
-                    "characters": "lmao u suck",
-                }
-            }
+               'trigger': {'type': 'keypress', 'keypress': '-KeyA'},
+               'test': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'background'}, 'rhs': {'type': 'literal', 'val': 'purple'}},
+               'action': {'type': 'type_chars', 'characters': 'lmao u suck'}
+            },
+            {
+               'trigger': {'type': 'keypress', 'keypress': '-Enter'},
+               'action': {'type': 'type_chars', 'characters': '\n'},
+            },
+            {
+               'trigger': {'type': 'keypress', 'keypress': '-Delete'},
+               'action': {'type': 'delete'},
+            },
+            {
+               'trigger': {'type': 'keypress', 'keypress': '-Backspace'},
+               'action': {'type': 'backspace'},
+            },
+            {
+               'trigger': {'type': 'keypress', 'keypress': '-ArrowUp'},
+               'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': -1},
+            },
+            {
+               'trigger': {'type': 'keypress', 'keypress': '-ArrowDown'},
+               'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': 1},
+            },
+            {
+               'trigger': {'type': 'keypress', 'keypress': '-ArrowLeft'},
+               'action': {'type': 'move_cursor', 'x_offset': -1, 'y_offset': 0},
+            },
+            {
+               'trigger': {'type': 'keypress', 'keypress': '-ArrowRight'},
+               'action': {'type': 'move_cursor', 'x_offset': 1, 'y_offset': 0},
+            },
+            {
+               'trigger': {'type': 'keypress', 'keypress': '-Tab'},
+               'action': {'type': 'type_chars', 'characters': '    '},
+            },
         ]
     }
 
