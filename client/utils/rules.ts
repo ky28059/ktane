@@ -48,10 +48,9 @@ export function eval_rule(state: RuleEvalContext, rule: Rule) {
 }
 
 // serialized rule received from server
-export type RuleAndTrigger = {
+export type RuleAndTrigger = Rule & {
     // if trigger matches, try to run rule
     trigger: Trigger,
-    rule: Rule,
 }
 
 // when an even occurs, we look in the rulebook to determine what rules to run for given event
