@@ -105,6 +105,11 @@ export default function ManualPlayerInterface(props: ManualPlayerInterfaceProps)
                 )) ?? (
                     <p>No keybinds found.</p>
                 )}
+                {groups['backspace']?.map((r) => (
+                    <KeybindDocumentation {...r} key={JSON.stringify(r)} />
+                )) ?? (
+                    <p>No keybinds found.</p>
+                )}
 
                 <h2 className="font-bold text-xl mt-12 mb-5" id="nav">
                     3. Navigation
