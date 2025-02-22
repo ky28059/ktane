@@ -70,16 +70,16 @@ export default function CodeEditor(props: CodeEditorProps) {
                 </SyntaxHighlighter>
             </div>
 
-            <div className="flex gap-8 bg-filebar text-white/40 py-4 px-5 font-mono text-sm border-t border-white/10">
+            <div className="flex gap-8 bg-filebar text-white/60 py-4 px-5 font-mono text-sm border-t border-white/10">
                 <div>
                     <p>S: {editorState.serial_number}</p>
-                    <p>KNU Scame</p>
+                    <p className="text-white/40">KNU Scame</p>
                 </div>
                 <div className="text-right ml-auto">
                     <p>M {file.buffer.mode} | B {file.buffer.bg_color}</p>
                     <p>C {file.buffer.cursor.x},{file.buffer.cursor.y}</p>
                 </div>
-                <div>
+                <div className="text-white/40">
                     All
                 </div>
             </div>

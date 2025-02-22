@@ -92,12 +92,19 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
         </div>
     )
 
-    if (props.id === '333') return (
-        <ManualPlayerInterface config={config} />
-    )
-
     return (
-        <CodePlayerInterface config={config} />
+        <div>
+            <audio
+                src="/audio/office.mp3"
+                autoPlay
+                loop
+            />
+            {props.id === '333' ? (
+                <ManualPlayerInterface config={config} />
+            ) : (
+                <CodePlayerInterface config={config} />
+            )}
+        </div>
     )
 }
 

@@ -13,6 +13,11 @@ export default function CodePlayerInterface(props: CodePlayerInterfaceProps) {
         <div className="flex h-screen">
             <CodeEditor config={props.config} />
             <Console />
+
+            <div className="bg-editor text-white fixed bottom-6 right-6 w-72 flex flex-col px-4 py-3 text-sm rounded">
+                <span className="text-white/50">Your code will be deployed to prod in:</span>
+                <span className="text-4xl font-mono">3:21</span>
+            </div>
         </div>
     )
 }
