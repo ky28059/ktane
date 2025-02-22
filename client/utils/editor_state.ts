@@ -12,6 +12,44 @@ export type BufferState = {
     mode: Mode,
 }
 
+
+function type_chars_no_newline(buffer: BufferState, chars: string) {
+    if (buffer.lines.length === buffer.cursor.y) {
+        buffer.lines.push('');
+    }
+
+    const line = buffer.lines[buffer.cursor.y];
+    buffer.lines[buffer.cursor.y] = line.slice(0, buffer.cursor.x) + chars + line.slice(buffer.cursor.x);
+    buffer.cursor.y += chars.length;
+}
+
+function type_newline(buffer: BufferState) {
+    if (buffer.lines.length === buffer.cursor.y) {
+        buffer.lines.push('');
+    }
+
+    const line = buffer.lines[buffer.cursor.y];
+    const line_end = line.slice(buffer.cursor.y);
+    buffer.lines[buffer.cursor.y] = line.slice(0, buffer.cursor.y);
+
+    buffer.cursor.x = 0;
+    buffer.cursor.y += 1;
+
+    buffer.lines.splice(buffer.cursor.y, 0, line_end);
+}
+
+export function type_chars(buffer: BufferState, chars: string) {
+    const parts = chars.split('\n');
+
+    for (let i = 0; i < parts.length; i++) {
+        if (i != 0) {
+            type_newline(buffer);
+        }
+
+        type_chars_no_newline(buffer, parts[i]);
+    }
+}
+
 export type OpenFile = {
     filename: string,
     buffer: BufferState,
@@ -30,6 +68,11 @@ export enum BgColor {
 
 export type EditorState = {
     open_files: OpenFile[],
+    buffer_index: number,
     serial_number: string,
     remaining_time: number,
+}
+
+export function get_current_file(state: EditorState): OpenFile {
+    return state.open_files[state.buffer_index];
 }
