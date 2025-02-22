@@ -23,7 +23,7 @@ function type_chars_no_newline(buffer: BufferState, chars: string) {
         buffer.lines.push('');
     }
 
-    const line = buffer.lines[buffer.cursor.y];
+    const line = buffer_current_line(buffer);
     buffer.lines[buffer.cursor.y] = line.slice(0, buffer.cursor.x) + chars + line.slice(buffer.cursor.x);
     buffer.cursor.x += chars.length;
 }
@@ -33,9 +33,9 @@ function type_newline(buffer: BufferState) {
         buffer.lines.push('');
     }
 
-    const line = buffer.lines[buffer.cursor.y];
-    const line_end = line.slice(buffer.cursor.y);
-    buffer.lines[buffer.cursor.y] = line.slice(0, buffer.cursor.y);
+    const line = buffer_current_line(buffer);
+    const line_end = line.slice(buffer.cursor.x);
+    buffer.lines[buffer.cursor.y] = line.slice(0, buffer.cursor.x);
 
     buffer.cursor.x = 0;
     buffer.cursor.y += 1;
@@ -55,12 +55,31 @@ export function type_chars(buffer: BufferState, chars: string) {
     }
 }
 
+export function delete_char(buffer: BufferState) {
+    if (buffer.lines.length === buffer.cursor.y) {
+        buffer.lines.push('');
+    }
+
+    const line = buffer_current_line(buffer);
+    if (line.length === buffer.cursor.x) {
+        // delete newline, so concat to lines into one
+        if (buffer.lines.length > buffer.cursor.y + 1) {
+            buffer.lines[buffer.cursor.y] += buffer.lines[buffer.cursor.y + 1];
+            buffer.lines.splice(buffer.cursor.y + 1, 1);
+        }
+    } else {
+        // delete individual character
+        buffer.lines[buffer.cursor.y] = line.slice(0, buffer.cursor.x) + line.slice(buffer.cursor.x + 1);
+    }
+}
+
 // make the cursor in bounds in case it is out of bounds
 export function constrain_cursor(buffer: BufferState) {
     if (buffer.cursor.x < 0) {
         buffer.cursor.y -= 1;
         buffer.cursor.x = 0;
-    } else if (buffer.cursor.x >= buffer_current_line(buffer).length) {
+    } else if (buffer.cursor.x > buffer_current_line(buffer).length) {
+        // it is ok for cursor to equal end of line
         buffer.cursor.y += 1;
         buffer.cursor.x = 0;
     }
