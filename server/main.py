@@ -80,7 +80,7 @@ async def get_lobby(request: Request):
     except json.JSONDecodeError:
         # Return a 400 Bad Request if the JSON is invalid
         raise HTTPException(status_code=400, detail="Invalid JSON data")
-    
+
     if "difficulty" not in json_data:
         raise HTTPException(status_code=400, detail="Invalid JSON data")
 

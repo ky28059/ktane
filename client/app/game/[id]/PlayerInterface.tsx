@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react';
-import { Duration } from 'luxon';
+import { DateTime, Duration } from 'luxon';
 
 // Components
 import ManualPlayerInterface from '@/app/game/[id]/ManualPlayerInterface';
@@ -17,14 +17,26 @@ type PlayerInterfaceProps = {
 }
 export default function PlayerInterface(props: PlayerInterfaceProps) {
     const [config, setConfig] = useState<GameConfig | null>(null);
+    const [role, setRole] = useState<'manual' | 'coder'>('manual');
+
+    const endDate = useRef<DateTime>(DateTime.now());
 
     useEffect(() => {
         const ws = new WebSocket(process.env.WS_BASE!);
 
         ws.addEventListener('message', (m: MessageEvent<BackendMessage>) => {
+            console.log(m.data);
+
             switch (m.data.type) {
-                case 'config': return setConfig(m.data.data);
-                case 'code_data': return // ...
+                case 'start':
+                    endDate.current = DateTime.fromMillis(m.data.data)
+                    break;
+                case 'config':
+                    return setConfig(m.data.data);
+                case 'code_data':
+                    return // ...
+                case 'role':
+                    return setRole(m.data.data);
             }
         });
     }, []);
@@ -41,15 +53,14 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
         if (!config) return;
 
         const id = setInterval(() => {
-            setTimeLeft((t) => {
-                const newTime = t.minus({ millisecond: 100 });
-                if (newTime < Duration.fromMillis(1000 * 60) && !alarmPlayed.current) {
-                    void alarmRef.current?.play();
-                    alarmPlayed.current = true;
-                }
+            const newTime = DateTime.now().diff(endDate.current);
 
-                return newTime;
-            });
+            if (newTime < Duration.fromMillis(1000 * 60) && !alarmPlayed.current) {
+                void alarmRef.current?.play();
+                alarmPlayed.current = true;
+            }
+
+            setTimeLeft(newTime);
         }, 100)
 
         return () => clearInterval(id);
@@ -98,7 +109,7 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
                 ref={alarmRef}
             />
 
-            {props.id === '333' ? (
+            {role === 'manual' ? (
                 <ManualPlayerInterface config={config} />
             ) : (
                 <CodePlayerInterface
@@ -110,7 +121,7 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     )
 }
 
-type BackendMessage = ConfigMessage | CodeDataMessage
+type BackendMessage = ConfigMessage | CodeDataMessage | RoleMessage | StartMessage
 
 type ConfigMessage = {
     type: 'config',
@@ -120,6 +131,16 @@ type ConfigMessage = {
 type CodeDataMessage = {
     type: 'code_data',
     data: {} // TODO
+}
+
+type RoleMessage = {
+    type: 'role',
+    data: 'manual' | 'coder'
+}
+
+type StartMessage = {
+    type: 'start',
+    data: number // epoch ms
 }
 
 const ex: GameConfig = {
