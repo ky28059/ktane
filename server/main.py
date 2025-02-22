@@ -108,4 +108,7 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
             logging.info(f"Testcase submitted: {result}")
             await websocket.send_json(result)
             await websocket.close(code=1000)
+
+            # Purge the lobby after submission
+            DB_COLLECTIONS["lobbies"].delete_many({"lobby_id": lobby_id})
             break
