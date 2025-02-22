@@ -6,6 +6,8 @@ type ManualPlayerInterfaceProps = {
     config: GameConfig
 }
 export default function ManualPlayerInterface(props: ManualPlayerInterfaceProps) {
+    const groups = Object.groupBy(props.config.rules, (r) => r.action.type);
+
     return (
         <div className="bg-gray-200">
             <div className="container font-serif py-16 max-w-6xl bg-white border-x border-black/20">
@@ -46,6 +48,9 @@ export default function ManualPlayerInterface(props: ManualPlayerInterfaceProps)
                     <li className="mb-2">
                         <a className="text-[#005090] underline" href="#mode">Mode</a>
                     </li>
+                    <li className="mb-2">
+                        <a className="text-[#005090] underline" href="#misc">Advanced</a>
+                    </li>
                 </ul>
 
                 <h2 className="font-bold text-xl mb-5" id="intro">
@@ -82,9 +87,29 @@ export default function ManualPlayerInterface(props: ManualPlayerInterfaceProps)
                     The following keybinds relate to inputting characters:
                 </p>
 
-                {props.config.rules.map((r) => (
+                {groups['type_chars']?.map((r) => (
                     <KeybindDocumentation {...r} key={JSON.stringify(r)} />
-                ))}
+                )) ?? (
+                    <p>No keybinds found.</p>
+                )}
+
+                <h2 className="font-bold text-xl mb-5" id="del">
+                    2.1. Deletion
+                </h2>
+                <p className="mb-8">
+                    The following keybinds relate to un-inputting characters:
+                </p>
+
+                {groups['delete']?.map((r) => (
+                    <KeybindDocumentation {...r} key={JSON.stringify(r)} />
+                )) ?? (
+                    <p>No keybinds found.</p>
+                )}
+                {groups['backspace']?.map((r) => (
+                    <KeybindDocumentation {...r} key={JSON.stringify(r)} />
+                )) ?? (
+                    <p>No keybinds found.</p>
+                )}
 
                 <h2 className="font-bold text-xl mt-12 mb-5" id="nav">
                     3. Navigation
@@ -93,39 +118,74 @@ export default function ManualPlayerInterface(props: ManualPlayerInterfaceProps)
                     The following keybinds relate to navigating around the currently edited document:
                 </p>
 
-                {props.config.rules.map((r) => (
+                {groups['move_cursor']?.map((r) => (
                     <KeybindDocumentation {...r} key={JSON.stringify(r)} />
-                ))}
+                )) ?? (
+                    <p>No keybinds found.</p>
+                )}
 
                 <h2 className="font-bold text-xl mt-12 mb-5" id="bg">
                     4. Background color
                 </h2>
                 <p className="mb-5">
                     Some Scame keybinds automatically enable based on your background color. By default, your background
-                    color is <code className="bg-gray-200 rounded px-1.5 py-0.5 text-sm">{props.config.initial_color}</code>.
+                    color is <code
+                    className="bg-gray-200 rounded px-1.5 py-0.5 text-sm">{props.config.initial_color}</code>.
                 </p>
                 <p className="mb-8">
                     The following keybinds relate to changing the current background color:
                 </p>
 
-                {props.config.rules.map((r) => (
+                {groups['change_bg']?.map((r) => (
                     <KeybindDocumentation {...r} key={JSON.stringify(r)} />
-                ))}
+                )) ?? (
+                    <p>No keybinds found.</p>
+                )}
 
                 <h2 className="font-bold text-xl mt-12 mb-5" id="mode">
                     5. Mode
                 </h2>
                 <p className="mb-5">
-                    Scame contains {props.config.modes.length} unique editing modes: <code className="bg-gray-200 rounded px-1.5 py-0.5 text-sm">{props.config.modes.join(', ')}</code>.
-                    By default, your mode is set to <code className="bg-gray-200 rounded px-1.5 py-0.5 text-sm">{props.config.initial_mode}</code>.
+                    Scame contains {props.config.modes.length} unique editing modes: <code
+                    className="bg-gray-200 rounded px-1.5 py-0.5 text-sm">{props.config.modes.join(', ')}</code>.
+                    By default, your mode is set to <code
+                    className="bg-gray-200 rounded px-1.5 py-0.5 text-sm">{props.config.initial_mode}</code>.
                 </p>
                 <p className="mb-8">
                     The following keybinds relate to changing the current mode:
                 </p>
 
-                {props.config.rules.map((r) => (
+                {groups['change_mode']?.map((r) => (
                     <KeybindDocumentation {...r} key={JSON.stringify(r)} />
-                ))}
+                )) ?? (
+                    <p>No keybinds found.</p>
+                )}
+
+                <h2 className="font-bold text-xl mt-12 mb-5" id="misc">
+                    6. Advanced
+                </h2>
+                <p className="mb-8">
+                    The following advanced Scame keybinds handle more advanced features than simple text insertion
+                    and deletion.
+                </p>
+
+                <h3 className="font-bold text-xl mt-12 mb-8" id="misc">
+                    6.1. Deploying to prod
+                </h3>
+                {groups['submit']?.map((r) => (
+                    <KeybindDocumentation {...r} key={JSON.stringify(r)} />
+                )) ?? (
+                    <p>No keybinds found.</p>
+                )}
+
+                <h3 className="font-bold text-xl mt-12 mb-8" id="misc">
+                    6.2. Multi-modal keybinds
+                </h3>
+                {groups['action_list']?.map((r) => (
+                    <KeybindDocumentation {...r} key={JSON.stringify(r)} />
+                )) ?? (
+                    <p>No keybinds found.</p>
+                )}
             </div>
         </div>
     )

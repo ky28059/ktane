@@ -12,7 +12,7 @@ export default function SyntaxHighlighter(props: SyntaxHighlighterProps) {
             language={props.language}
             style={vscDarkPlus}
             customStyle={{ margin: 0 }}
-            // codeTagProps={{style: {}}}
+            codeTagProps={{ style: { fontSize: '16px' } }}
             showLineNumbers
             // useInlineStyles={false}
         >
