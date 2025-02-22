@@ -5,10 +5,12 @@ export default function KeybindDocumentation(props: RuleAndTrigger) {
     if (props.trigger.type !== 'keypress') return;
 
     return (
-        <div className="flex gap-8 mb-6">
-            <code className="text-xl bg-black/5 rounded px-2 py-1 h-max">
-                {props.trigger.keypress}
-            </code>
+        <div className="flex gap-8 mb-10">
+            <div className="w-36">
+                <code className="text-xl bg-black/5 rounded px-2 py-1 h-max">
+                    {props.trigger.keypress}
+                </code>
+            </div>
             <div className="text-sm">
                 {props.test && (
                     <>
@@ -34,7 +36,10 @@ export default function KeybindDocumentation(props: RuleAndTrigger) {
                 */}
 
                 <p>
-                    <strong>Action:</strong> {actionToString(props.action)}
+                    <strong>Action:</strong>{' '}
+                    <span className="whitespace-pre-wrap">
+                        {actionToString(props.action)}
+                    </span>
                 </p>
             </div>
         </div>
@@ -48,8 +53,8 @@ function actionToString(a: Action): string {
         case 'change_bg': return `Changes the background color to \`${a.color}\`.`;
         case 'move_cursor': return `Moves the cursor by \`(${a.x_offset}, ${a.y_offset})\`.`
         case 'change_mode': return `Changes the current mode to \`${a.mode}\`.`;
-        case 'type_chars': return `Types the character(s) \`${a.characters}\`.`;
-        case 'delete': return 'Deletes the character at the cursur.';
+        case 'type_chars': return `Types the character(s) \`${a.characters.replaceAll('\n', '[newline]').replaceAll('\t', '[tab]')}\`.`;
+        case 'delete': return 'Deletes the character at the cursor.';
         case 'action_list': return a.actions.map(actionToString).join(', ')
     }
 }

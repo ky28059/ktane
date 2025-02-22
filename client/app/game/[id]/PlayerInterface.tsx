@@ -70,7 +70,9 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
         });
     }, []);
 
-    const joinHref = new URL(`/game/${props.id}`, window.location.href).href;
+    // Hydration error workaround
+    const [joinHref, setJoinHref] = useState('');
+    useEffect(() => setJoinHref(new URL(`/game/${props.id}`, window.location.href).href), []);
 
     if (!config) return ( // TODO
         <div className="bg-editor flex flex-col gap-2 items-center justify-center h-screen text-white">
