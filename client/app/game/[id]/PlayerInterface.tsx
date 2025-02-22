@@ -22,23 +22,26 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     const endDate = useRef<DateTime>(DateTime.now());
 
     useEffect(() => {
-        const ws = new WebSocket(process.env.WS_BASE!);
+        const ws = new WebSocket(`${process.env.WS_BASE!}/${props.id}`);
 
-        ws.addEventListener('message', (m: MessageEvent<BackendMessage>) => {
-            console.log(m.data);
+        ws.addEventListener('message', (m: MessageEvent<string>) => {
+            console.log(m.data, typeof m.data);
+            const res = JSON.parse(m.data) as BackendMessage;
 
-            switch (m.data.type) {
+            switch (res.type) {
                 case 'start':
-                    endDate.current = DateTime.fromMillis(m.data.data)
+                    endDate.current = DateTime.fromMillis(res.end_time)
                     break;
                 case 'config':
-                    return setConfig(m.data.data);
+                    return setConfig(res.data);
                 case 'code_data':
                     return // ...
                 case 'role':
-                    return setRole(m.data.data);
+                    return setRole(res.data);
             }
         });
+
+        return () => ws.close();
     }, []);
 
     // Hydration error workaround
@@ -140,7 +143,7 @@ type RoleMessage = {
 
 type StartMessage = {
     type: 'start',
-    data: number // epoch ms
+    end_time: number // epoch ms
 }
 
 const ex: GameConfig = {

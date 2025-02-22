@@ -1,5 +1,6 @@
 from fastapi import FastAPI, WebSocket, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import json
 import secrets
 from db.connections import *    # Is this bad?
@@ -12,6 +13,20 @@ from pprint import pprint
 DB_COLLECTIONS = get_collections()
 
 app = FastAPI()
+
+# Configure CORS
+origins = [
+    "http://localhost:3000",
+    # TODO: prod endpoint
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Insane amount of debugging routes just to be
 @app.get("/dumpall")

@@ -9,7 +9,7 @@ export default function ManualPlayerInterface(props: ManualPlayerInterfaceProps)
     const groups = Object.groupBy(props.config.rules, (r) => r.action.type);
 
     return (
-        <div className="bg-gray-200">
+        <div className="bg-gray-200 text-black">
             <div className="container font-serif py-16 max-w-6xl bg-white border-x border-black/20">
                 <h1 className="font-bold text-4xl mb-6">
                     The Scame Editor
