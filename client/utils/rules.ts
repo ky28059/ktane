@@ -31,6 +31,30 @@ export type Rulebook = {
     event_rules: Rule[],
 }
 
+export function rulebook_from_rule_list(rules: RuleAndTrigger[]): Rulebook {
+    const rulebook: Rulebook = {
+        keypress_rules: {},
+        event_rules: [],
+    };
+
+    for (const rule of rules) {
+        switch (rule.trigger.type) {
+            case 'keypress':
+                if (rulebook.keypress_rules[rule.trigger.keypress]) {
+                    rulebook.keypress_rules[rule.trigger.keypress].push(rule.rule);
+                } else {
+                    rulebook.keypress_rules[rule.trigger.keypress] = [rule.rule];
+                }
+                break;
+            case 'event_trigger':
+                rulebook.event_rules.push(rule.rule);
+                break;
+        }
+    }
+
+    return rulebook;
+}
+
 export function run_keypress_rules(state: EditorState, rulebook: Rulebook, keypress: string) {
     const rule_eval_context = {
         editor_state: state,
@@ -245,7 +269,13 @@ export type ChangeModeAction = {
     mode: Mode,
 }
 
-export type Action = DieAction | TypeCharsAction | SubmitAction | ChangeBackgroundAction | ChangeModeAction
+export type MoveCursurAction = {
+    type: 'move_cursor',
+    x_offset: number,
+    y_offset: number,
+}
+
+export type Action = DieAction | TypeCharsAction | SubmitAction | ChangeBackgroundAction | ChangeModeAction | MoveCursurAction
 
 export function do_action(state: RuleEvalContext, action: Action) {
     const buffer = context_get_buffer(state);
@@ -265,6 +295,10 @@ export function do_action(state: RuleEvalContext, action: Action) {
             break;
         case 'change_mode':
             buffer.mode = action.mode;
+            break;
+        case 'move_cursor':
+            buffer.cursor.x += action.x_offset;
+            buffer.cursor.y += action.y_offset;
             break;
     }
 }
