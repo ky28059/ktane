@@ -1,10 +1,8 @@
-const SERVER_HOST = process.env.NODE_ENV === 'development' ? 'localhost:8000' : 'ctf.b01lers.com'
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     env: {
-        API_BASE: `http://${SERVER_HOST}`,
-        WS_BASE: `ws://${SERVER_HOST}/ws`,
+        API_BASE: `http://localhost:8000`,
+        WS_BASE: `ws://localhost:8000/ws`,
     },
     logging: {
         fetches: {
