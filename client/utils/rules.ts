@@ -48,10 +48,9 @@ function eval_rule(state: RuleEvalContext, rule: Rule) {
 }
 
 // serialized rule received from server
-export type RuleAndTrigger = {
+export type RuleAndTrigger = Rule & {
     // if trigger matches, try to run rule
     trigger: Trigger,
-    rule: Rule,
 }
 
 // when an even occurs, we look in the rulebook to determine what rules to run for given event
@@ -71,13 +70,13 @@ function rulebook_from_rule_list(rules: RuleAndTrigger[]): Rulebook {
         switch (rule.trigger.type) {
             case 'keypress':
                 if (rulebook.keypress_rules[rule.trigger.keypress]) {
-                    rulebook.keypress_rules[rule.trigger.keypress].push(rule.rule);
+                    rulebook.keypress_rules[rule.trigger.keypress].push(rule);
                 } else {
-                    rulebook.keypress_rules[rule.trigger.keypress] = [rule.rule];
+                    rulebook.keypress_rules[rule.trigger.keypress] = [rule];
                 }
                 break;
             case 'event_trigger':
-                rulebook.event_rules.push(rule.rule);
+                rulebook.event_rules.push(rule);
                 break;
         }
     }
@@ -160,7 +159,7 @@ export type LiteralExpr = {
     val: Value,
 }
 
-// expression that retreives a value from the state
+// expression that retrieves a value from the state
 export enum StateValue {
     Background = 'background',
     LineNum = 'line_num',
