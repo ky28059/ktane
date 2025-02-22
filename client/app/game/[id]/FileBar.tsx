@@ -3,8 +3,7 @@ import { FaPython } from 'react-icons/fa6';
 
 type FileBarProps = {
     files: string[],
-    selected: string,
-    setSelected: (selected: string) => void,
+    selected: string
 }
 export default function FileBar(props: FileBarProps) {
     return (
@@ -14,7 +13,6 @@ export default function FileBar(props: FileBarProps) {
                     key={file}
                     name={file}
                     selected={props.selected}
-                    setSelected={props.setSelected}
                 />
             ))}
         </div>
@@ -24,7 +22,6 @@ export default function FileBar(props: FileBarProps) {
 type FileProps = {
     name: string,
     selected: string,
-    setSelected: (selected: string) => void,
 }
 function File(props: FileProps) {
     const active = props.selected === props.name;
@@ -32,7 +29,7 @@ function File(props: FileProps) {
     return (
         <button
             className={'flex items-center gap-1 px-3 py-1.5 text-sm cursor-pointer border-x border-t ' + (active ? 'text-white border-t-blue-500 border-b border-b-editor border-x-white/25 -mb-px bg-editor' : 'text-white/40 border-x-transparent border-t-transparent')}
-            onClick={() => props.setSelected(props.name)}
+            // onClick={() => props.setSelected(props.name)}
         >
             <FaPython />
             {props.name}
