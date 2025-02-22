@@ -41,7 +41,7 @@ export type Rule = {
     action: Action,
 }
 
-export function eval_rule(state: RuleEvalContext, rule: Rule) {
+function eval_rule(state: RuleEvalContext, rule: Rule) {
     if (eval_expr(state, rule.test) === true) {
         do_action(state, rule.action);
     }
@@ -175,7 +175,7 @@ export type StateValueExpr = {
     val: StateValue,
 }
 
-export function eval_state_value(context: RuleEvalContext, expr: StateValueExpr): Value {
+function eval_state_value(context: RuleEvalContext, expr: StateValueExpr): Value {
     const buffer = context_get_buffer(context);
 
     switch (expr.val) {
@@ -208,7 +208,7 @@ export type UnaryOpExpr = {
     val: Expr,
 }
 
-export function eval_un_op(context: RuleEvalContext, expr: UnaryOpExpr): Value {
+function eval_un_op(context: RuleEvalContext, expr: UnaryOpExpr): Value {
     const val = eval_expr(context, expr.val);
 
     switch (expr.op_type) {
@@ -239,7 +239,7 @@ export type BinOpExpr = {
     rhs: Expr,
 }
 
-export function eval_bin_op(context: RuleEvalContext, expr: BinOpExpr): Value {
+function eval_bin_op(context: RuleEvalContext, expr: BinOpExpr): Value {
     const lhs = eval_expr(context, expr.lhs);
     const rhs = eval_expr(context, expr.rhs);
 
@@ -267,7 +267,7 @@ export function eval_bin_op(context: RuleEvalContext, expr: BinOpExpr): Value {
 
 export type Expr = LiteralExpr | StateValueExpr | UnaryOpExpr | BinOpExpr
 
-export function eval_expr(state: RuleEvalContext, expr: Expr): Value {
+function eval_expr(state: RuleEvalContext, expr: Expr): Value {
     switch (expr.type) {
         case 'literal':
             return expr.val;
@@ -313,7 +313,7 @@ export type MoveCursurAction = {
 
 export type Action = DieAction | TypeCharsAction | SubmitAction | ChangeBackgroundAction | ChangeModeAction | MoveCursurAction
 
-export function do_action(state: RuleEvalContext, action: Action) {
+function do_action(state: RuleEvalContext, action: Action) {
     const buffer = context_get_buffer(state);
 
     switch (action.type) {
