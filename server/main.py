@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, HTTPException
+from fastapi import FastAPI, WebSocket, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 import json
 import secrets
@@ -6,7 +6,7 @@ from db.connections import *    # Is this bad?
 from utils import *
 import asyncio
 import time
-
+from pprint import pprint
 
 
 DB_COLLECTIONS = get_collections()
@@ -69,8 +69,21 @@ async def debug():
 
 # Just no security and let user generate a lobby id freely ig
 
-@app.get("/get-lobby")
-async def get_lobby():
+@app.post("/lobby")
+async def get_lobby(request: Request):
+    # Get the raw JSON body
+    raw_body = await request.body()
+    
+    # Parse the JSON data
+    try:
+        json_data = json.loads(raw_body)
+    except json.JSONDecodeError:
+        # Return a 400 Bad Request if the JSON is invalid
+        raise HTTPException(status_code=400, detail="Invalid JSON data")
+    
+    if "difficulty" not in json_data:
+        raise HTTPException(status_code=400, detail="Invalid JSON data")
+
     # Gen until we have a non-existing lobby, should not hang lol
 
     while True:
@@ -83,7 +96,7 @@ async def get_lobby():
 
         try:
             # Initialize with empty data
-            DB_COLLECTIONS["lobbies"].insert_one({"lobby_id": lobby_id, "config": {}, "manual_in": False, "coder_in": False, "locked": False})
+            DB_COLLECTIONS["lobbies"].insert_one({"lobby_id": lobby_id, "config": {}, "manual_in": False, "coder_in": False, "locked": False, "difficulty": json_data["difficulty"]})
             return JSONResponse(content={"lobby_id": lobby_id})
         except Exception as e:
             logging.error(str(e))
@@ -92,7 +105,12 @@ async def get_lobby():
 
 @app.websocket("/ws/{lobby_id}")
 async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
+    print("HEY BRO IM INNNNNN")
+    await websocket.accept()
+
+    first = False
     # Scuffed while loop for locking the db
+
     lobby_info = None
     while True:
         lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
@@ -108,11 +126,10 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
         if lobby_info["locked"] == True:
             continue
         else:
+            print("I LOCKED THE LOBBY")
             DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"locked": True}})
             break
     
-    await websocket.accept()
-
     my_role = 0
 
     # If someone already assumes a role, you take the other one
@@ -123,9 +140,14 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
 
         DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"coder_in": True}})
 
+        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"exp": int(time.time())}})
+
     elif lobby_info["coder_in"] == True:
         DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"manual_in": True}})
+        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"exp": int(time.time())}})
+
     else:
+        first = True
         my_role = int(time.time()) % 2
         if my_role == 0:
             DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"manual_in": True}})
@@ -136,34 +158,101 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
 
     DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"locked": False}})
 
-    # ---- That is end of locking code
-    
-    # Kevin said just send it once
+    print("BRO I RELEASED THE LOCKED ALREADYYYYYYYY")
 
-    config = generate_bind()
+    # ---- That is end of locking code
+
+    # Have a checker loop to wait for the players
+    
+
+    # First send who i am
+
+    await websocket.send_json({"type": "role", "data": "manual" if my_role == 0 else "coder"})
+
+    # Then wait for the other guy
+    if first:
+        while True:
+            print("Waiting for bro to connect")
+            await asyncio.sleep(2)  # Use asyncio.sleep instead of time.sleep
+            lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
+            pprint(lobby_info)
+            if lobby_info["manual_in"] and lobby_info["coder_in"]:
+                break
+
+
+
+    # Then I start sending
+
+    lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
+
+    pprint(lobby_info)
+
+    config = generate_bind(lobby_info["difficulty"]) # Assuming Jack is the GOAT no error
+    await websocket.send_json({"type": "start", "end_time": lobby_info["exp"]})
+
     await websocket.send_json({"type": "config", "data": config})
 
     DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"config": config}})
 
     code_data = grab_test_data()
+
+    # TODO: ensure kevin handles this 
+
     await websocket.send_json({"type": "code_data", "data": code_data})
 
+    # Both players would have to see this while loop to receive start signal
+
+    while True:
+        try:
+            # Check the status of the database
+
+            lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
+
+            if "purgable" in lobby_info:
+                print("\n\n FINISHED SO I GET THE RESULT LAST\n\n")
+                # This is the case for the second guy
+
+                result = lobby_info["result"]
+                await websocket.send_json({"type": "result", "data": result})
+                await websocket.close(code=1000)
+                # Purge the lobby after submission (Because I'm the second guy)
+
+                DB_COLLECTIONS["lobbies"].delete_many({"lobby_id": lobby_id})
+                return
+            
+            data = await asyncio.wait_for(websocket.receive_json(), timeout=1.0)
+
+            if data["state"] == "submitted":
+                result = submit_testcase(data["code"])
+                logging.info(f"Testcase submitted: {result}")
+
+                # Write to the database
+
+                DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"purgable": True, "result": result}})
+
+                await websocket.send_json({"type": "result", "data": result})
+                await websocket.close(code=1000)
+                break
+            else:
+                lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
+                if not lobby_info:
+                    await websocket.close(code=1000)
+
+        except asyncio.TimeoutError:
+            continue
+        except Exception as e:
+            print(str(e))
+            await websocket.send_json({"error": str(e), "cooked": True})
+            await websocket.close(code=1000)
+            return
+
+
+# TODO: delete this baseline endpoint after everything works
+
+@app.websocket("/ws/test/{lobby_id}")
+async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
+    await websocket.accept()
+    await websocket.send_json({"message": f"Connected to {lobby_id}"})
     while True:
         data = await websocket.receive_text()
-        parsed_data = json.loads(data)
-
-        if parsed_data["state"] == "died":
-            await websocket.send_json({"killed": True})
-            await websocket.close(code=1000)
-            DB_COLLECTIONS["lobbies"].delete_many({"lobby_id": lobby_id})
-            break
-
-        elif parsed_data["state"] == "submitted":
-            result = submit_testcase(parsed_data["code"])
-            logging.info(f"Testcase submitted: {result}")
-            await websocket.send_json(result)
-            await websocket.close(code=1000)
-
-            # Purge the lobby after submission
-            DB_COLLECTIONS["lobbies"].delete_many({"lobby_id": lobby_id})
-            break
+        await websocket.send_json({"message": f"You said: {data}"})
