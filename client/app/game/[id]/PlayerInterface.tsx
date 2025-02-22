@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react';
+import { Duration } from 'luxon';
 
 // Components
 import ManualPlayerInterface from '@/app/game/[id]/ManualPlayerInterface';
@@ -32,12 +33,37 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     const [joinHref, setJoinHref] = useState('');
     useEffect(() => setJoinHref(new URL(`/game/${props.id}`, window.location.href).href), []);
 
+    // Timer
+    const [timeLeft, setTimeLeft] = useState(Duration.fromMillis(1000 * 60 * 5));
+    const alarmPlayed = useRef(false);
+
+    useEffect(() => {
+        if (!config) return;
+
+        const id = setInterval(() => {
+            setTimeLeft((t) => {
+                const newTime = t.minus({ millisecond: 100 });
+                if (newTime < Duration.fromMillis(1000 * 60) && !alarmPlayed.current) {
+                    void alarmRef.current?.play();
+                    alarmPlayed.current = true;
+                }
+
+                return newTime;
+            });
+        }, 100)
+
+        return () => clearInterval(id);
+    }, [config])
+
+    // Sounds
     const jazzRef = useRef<HTMLAudioElement>(null);
+    const alarmRef = useRef<HTMLAudioElement>(null);
+
     useEffect(() => {
         window.addEventListener('keydown', () => jazzRef.current?.play())
     }, []);
 
-    if (!config) return ( // TODO
+    if (!config) return (
         <div className="bg-editor flex flex-col gap-2 items-center justify-center h-screen text-white">
             <audio
                 src="/audio/jazz.mp3"
@@ -46,7 +72,6 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
                 loop
             />
 
-            {/* TODO: logo */}
             <img
                 src="/assets/logo.png"
                 className="max-w-2xl"
@@ -68,10 +93,18 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
                 autoPlay
                 loop
             />
+            <audio
+                src="/audio/alarm.mp3"
+                ref={alarmRef}
+            />
+
             {props.id === '333' ? (
                 <ManualPlayerInterface config={config} />
             ) : (
-                <CodePlayerInterface config={config} />
+                <CodePlayerInterface
+                    config={config}
+                    timeLeft={timeLeft}
+                />
             )}
         </div>
     )
