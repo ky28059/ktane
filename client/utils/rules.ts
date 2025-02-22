@@ -2,7 +2,7 @@ import { EditorState, BgColor, Mode, BufferState, get_current_file, type_chars }
 
 export type GameConfig = {
     initial_state: EditorState,
-    rules: Rule[],
+    rules: RuleAndTrigger[],
 }
 
 export type Rule = {
