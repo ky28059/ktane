@@ -1,5 +1,5 @@
 def check(a: str, b: str) -> bool:
-    return a[0] == b
+    return a.startswith(b)
 
 NAME = "string_starts_with"
 
