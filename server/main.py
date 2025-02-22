@@ -1,13 +1,23 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse, JSONResponse
 import json
-import requests
 import secrets
 from db.connections import *    # Is this bad?
+from utils import *
+import asyncio
+
 
 DB_COLLECTIONS = get_collections()
 
 app = FastAPI()
+
+@app.get("/dumpall")
+async def dump_all():
+    """Dump all collections in the database."""
+    result = {}
+    for name, collection in DB_COLLECTIONS.items():
+        result[name] = [serialize_document(doc) for doc in collection.find({})]
+    return result
 
 html = """
 <!DOCTYPE html>
@@ -51,13 +61,14 @@ async def get_lobby():
     while True:
         lobby_id = secrets.token_hex(10)
         if DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id}):
+            # Duplicate lmaoo
             continue
 
         # Log the lobby_id
 
         try:
             # Initialize with empty data
-            DB_COLLECTIONS["lobbies"].insert_one({"lobby_id": lobby_id, "data": {}})
+            DB_COLLECTIONS["lobbies"].insert_one({"lobby_id": lobby_id, "config": {}})
             return JSONResponse(content={"lobby_id": lobby_id})
         except Exception as e:
             logging.error(str(e))
@@ -66,7 +77,32 @@ async def get_lobby():
 
 @app.websocket("/ws/{lobby_id}")
 async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
+    if not DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id}):
+        await websocket.close(code=1008, reason="Invalid lobby_id?!")
+        return
+
     await websocket.accept()
+    
+    # Kevin said just send it once
+
+    config = generate_bind()
+    await websocket.send_json(config)
+
+    DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"config": config}})
+
     while True:
         data = await websocket.receive_text()
-        await websocket.send_text(f"Message text was: {data}, Lobby id was {lobby_id}")
+        parsed_data = json.loads(data)
+
+        if parsed_data["state"] == "died":
+            await websocket.send_json({"killed": True})
+            await websocket.close(code=1000)
+            DB_COLLECTIONS["lobbies"].delete_many({"lobby_id": lobby_id})
+            break
+
+        elif parsed_data["state"] == "submitted":
+            result = submit_testcase(parsed_data["code"])
+            logging.info(f"Testcase submitted: {result}")
+            await websocket.send_json(result)
+            await websocket.close(code=1000)
+            break
