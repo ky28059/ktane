@@ -1,0 +1,31 @@
+services:
+  nsjail-runner:
+    build: ./nsjail
+    ports:
+      - 5001:5001
+    privileged: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  
+  backend:
+    build: ./server
+    ports:
+      - 8000:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  
+  
+  frontend:
+    build: ./client
+    ports:
+      - 3000:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  

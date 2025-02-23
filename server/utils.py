@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import List
 import itertools
 
-NSJAIL_HOST = "http://nsjail:5001/"
+NSJAIL_HOST = "http://host.docker.internal:5001/"
 
 POSSIBLE_MODES = [
     "square",

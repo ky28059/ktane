@@ -77,7 +77,9 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     }, []);
 
     if (!config) return (
-        <div className="bg-editor flex flex-col gap-2 items-center justify-center h-screen text-white">
+        <div className="relative bg-[url('/assets/office.jpg')] bg-cover bg-center flex flex-col gap-2 items-center justify-center h-screen text-white">
+            <div className="absolute inset-0 backdrop-blur-sm" />
+
             <audio
                 src="/audio/jazz.mp3"
                 ref={jazzRef}
@@ -87,11 +89,11 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
 
             <img
                 src="/assets/logo.png"
-                className="max-w-2xl"
+                className="max-w-2xl relative"
             />
-            <p className="max-w-3xl text-pretty text-center">
+            <p className="max-w-3xl text-pretty text-center relative">
                 This game hasn't started yet! Invite someone else to play at{' '}
-                <a href={joinHref} className="text-white/50 underline">{joinHref}</a>, or press any key to relax
+                <a href={joinHref} className="text-white/50 underline bg-black/50 px-2 py-1.5 rounded hover:text-white/70 transition duration-100">{joinHref}</a>, or press any key to relax
                 in the meantime.
             </p>
         </div>
