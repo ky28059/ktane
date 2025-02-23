@@ -77,7 +77,7 @@ SPECIAL_KEYCODES_TYPABLE = [
 ]
 
 SPECIAL_KEYCODES_UNTYPABLE = [
-    'Backspace',
+    # 'Backspace',
     # These are impossible to type
     # 'ShiftLeft',
     # 'ShiftRight',
@@ -86,7 +86,7 @@ SPECIAL_KEYCODES_UNTYPABLE = [
     'End',
     # Many laptop don't have an insert key
     # 'Insert',
-    'Delete',
+    # 'Delete',
     'ArrowUp',
     'ArrowDown',
     'ArrowLeft',
