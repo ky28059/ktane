@@ -44,6 +44,9 @@ export type Rule = {
 function eval_rule(state: RuleEvalContext, rule: Rule) {
     if (!rule.test || eval_expr(state, rule.test) === true) {
         do_action(state, rule.action);
+        return true;
+    } else {
+        return false;
     }
 }
 
@@ -90,9 +93,14 @@ export function run_keypress_rules(state: EditorState, keypress: string): boolea
         buffer: get_current_file(state).buffer,
     };
 
-    state.rulebook.keypress_rules[keypress]?.forEach(rule => eval_rule(rule_eval_context, rule));
+    let rule_matched = false;
+    state.rulebook.keypress_rules[keypress]?.forEach(rule => {
+        if (eval_rule(rule_eval_context, rule)) {
+            rule_matched = true;
+        }
+    });
 
-    return state.rulebook.keypress_rules[keypress] !== undefined
+    return rule_matched;
 }
 
 export function run_event_rule(state: EditorState) {

@@ -41,7 +41,8 @@ class Color(StrEnum):
 ASCII_KEYCODES = [f'Key{l}' for l in string.ascii_uppercase]
 NUMBER_KEYCODES = [f'Digit{i}' for i in range(9)]
 F_KEYCODES = [f'F{i}' for i in range(1, 13)]
-SPECIAL_KEYCODES = [
+
+SPECIAL_KEYCODES_TYPABLE = [
     'Minus',
     'Equal',
     'BracketLeft',
@@ -52,13 +53,17 @@ SPECIAL_KEYCODES = [
     'Comma',
     'Period',
     'Slash',
+    'Space',
+    'Backquote',
+    'Tab',
     'Enter',
+]
+
+SPECIAL_KEYCODES_UNTYPABLE = [
     'Backspace',
     'ShiftLeft',
     'ShiftRight',
-    'Tab',
     'CapsLock',
-    'Backquote',
     'Home',
     'End',
     'Insert',
@@ -69,14 +74,17 @@ SPECIAL_KEYCODES = [
     'ArrowRight',
 ]
 
+SPECIAL_KEYCODES = SPECIAL_KEYCODES_TYPABLE + SPECIAL_KEYCODES_UNTYPABLE
+TYPABLE_KEYS = ASCII_KEYCODES + NUMBER_KEYCODES + SPECIAL_KEYCODES_TYPABLE
+
 ALL_KEYS = ASCII_KEYCODES + NUMBER_KEYCODES + F_KEYCODES + SPECIAL_KEYCODES
 
 @dataclass
 class Keypress:
     key: string
-    ctrl: bool
-    shift: bool
-    alt: bool
+    ctrl: bool = False
+    shift: bool = False
+    alt: bool = False
 
     def to_key_string(self):
         out = ''
@@ -90,6 +98,12 @@ class Keypress:
             out += 'A'
         
         return out + '-' + self.key
+
+    def to_trigger(self):
+        return {
+            'type': 'keypress',
+            'keypress': self.to_key_string(),
+        }
     
     @staticmethod
     def random_keycode():
@@ -113,6 +127,9 @@ class GraphNode:
     value: any
     edges: List[int]
 
+    def has_edge_to(self, dst_index):
+        return dst_index in self.edges
+
 @dataclass
 class Graph:
     nodes: List[GraphNode]
@@ -126,6 +143,10 @@ class Graph:
     
     def random_node_index(self):
         return random.randrange(0, self.node_count())
+    
+    def has_edge(self, edge):
+        src_i, dst_i = edge
+        return self.nodes[src_i].has_edge_to(dst_i)
 
     # generates random edges until every node is reachable from every other node
     def random_edges_fully_connected(self):
@@ -140,6 +161,10 @@ class Graph:
             while src_index == dst_index:
                 dst_index = self.random_node_index()
             
+            if self.has_edge((src_index, dst_index)):
+                # no duplicates
+                continue
+            
             self.nodes[src_index].edges.append(dst_index)
             reachable_sets[src_index] = reachable_sets[src_index] | reachable_sets[dst_index]
             if len(reachable_sets[src_index]) == self.node_count():
@@ -152,6 +177,32 @@ class Graph:
     
     def edge_list_values(self) -> List[any]:
         return [(self.nodes[src_i].value, self.nodes[dst_i].value) for src_i, dst_i in self.edge_list_index()]
+
+def take_proportion(keys, proportion):
+    take_amount = int(len(keys) * proportion)
+    end = keys[len(keys) - take_amount:]
+    del keys[len(keys) - take_amount]
+    return end
+
+def bin_op(op_type, lhs, rhs):
+    return {
+        'type': 'bin_op',
+        'op_type': op_type,
+        'lhs': lhs,
+        'rhs': rhs,
+    }
+
+def state_val(value):
+    return {
+        'type': 'state_value',
+        'val': value,
+    }
+
+def literal(value):
+    return {
+        'type': 'literal',
+        'val': value,
+    }
 
 def generate_bind(difficulty: Difficulty):
     num_modes = 2 * difficulty + 4
@@ -208,18 +259,37 @@ def generate_bind(difficulty: Difficulty):
         },
     ]
 
+    # mode keybinds
     for src_mode, dst_mode in mode_graph.edge_list_values():
         rules.append({
-            'trigger': {'type': 'keypress', 'keypress': Keypress.random().to_key_string()},
-            'test': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'mode'}, 'rhs': {'type': 'literal', 'val': src_mode}},
+            'trigger': Keypress.random().to_trigger(),
+            'test': bin_op('equals', state_val('mode'), literal(src_mode)),
             'action': {'type': 'change_mode', 'mode': dst_mode},
         })
     
+    # color keybinds
     for src_color, dst_color in color_graph.edge_list_values():
         rules.append({
-            'trigger': {'type': 'keypress', 'keypress': Keypress.random().to_key_string()},
-            'test': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'background'}, 'rhs': {'type': 'literal', 'val': str(src_color)}},
+            'trigger': Keypress.random().to_trigger(),
+            'test': bin_op('equals', state_val('background'), literal(src_color)),
             'action': {'type': 'change_bg', 'color': str(dst_color)},
+        })
+    
+    typable_keypress = [Keypress(key = key) for key in TYPABLE_KEYS]
+    random.shuffle(typable_keypress)
+
+    for keypress in take_proportion(typable_keypress, 0.1 + 0.03 * difficulty):
+        if random.choice([True, False]):
+            pos_source = 'line_num'
+        else:
+            pos_source = 'column_num'
+        
+        mod_val = random.randrange(2, 8)
+
+        rules.append({
+            'trigger': keypress.to_trigger(),
+            'test': bin_op('equals', bin_op('mod', state_val(pos_source), literal(mod_val)), literal(random.randrange(0, 20) % mod_val)),
+            'action': {'type': 'delete'},
         })
 
     # TODO: actual logic of keybind generation
