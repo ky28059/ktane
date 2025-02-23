@@ -27,7 +27,16 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     const ws = useRef<WebSocket>(null);
 
     useEffect(() => {
+        let sessionId = localStorage.getItem('sessionId');
+        if (!sessionId) {
+            sessionId = crypto.randomUUID();
+            localStorage.setItem('sessionId', sessionId);
+        }
+
         ws.current = new WebSocket(`${process.env.WS_BASE!}/${props.id}`);
+        ws.current.addEventListener('open', () => {
+            ws.current!.send(JSON.stringify({ session_id: sessionId }));
+        });
 
         ws.current.addEventListener('message', (m: MessageEvent<string>) => {
             console.log(m.data, typeof m.data);

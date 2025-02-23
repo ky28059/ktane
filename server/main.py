@@ -8,11 +8,17 @@ from utils import *
 import asyncio
 import time
 from pprint import pprint
+from typing import Dict, List, Optional
+import traceback
+from websockets.protocol import State  # Import State to check if it's open
 
 
 DB_COLLECTIONS = get_collections()
+GLOBAL_LOCK = asyncio.Lock()
+INMEM_LOBBY = {}
 
 app = FastAPI()
+
 
 # Configure CORS
 origins = [
@@ -30,67 +36,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Insane amount of debugging routes just to be
-@app.get("/dumpall")
-async def dump_all():
-    """Dump all collections in the database."""
-    result = {}
-    for name, collection in DB_COLLECTIONS.items():
-        result[name] = [serialize_document(doc) for doc in collection.find({})]
-    return result
-
-
-@app.post("/emptydb")
-async def empty_db():
-    """Delete all documents from all collections in the database."""
-    try:
-        for name, collection in DB_COLLECTIONS.items():
-            collection.delete_many({})  # Deletes all documents in the collection
-        return {"message": "All collections emptied successfully"}
-    except Exception as e:
-        logging.error(f"Error emptying database: {e}")
-        raise HTTPException(status_code=500, detail="Failed to empty the database")
-
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Real-Time App</title>
-    </head>
-    <body>
-        <h1>WebSocket Chat</h1>
-        <textarea id="messages" cols="30" rows="10" readonly></textarea><br>
-        <input type="text" id="messageText" autocomplete="off"/><button onclick="sendMessage()">Send</button>
-        <script>
-            const ws = new WebSocket("ws://localhost:8000/ws/" + (Math.random() + 1).toString(36).substring(2));
-            ws.onmessage = function(event) {
-                const messages = document.getElementById('messages');
-                messages.value += event.data + '\\n';
-            };
-            function sendMessage() {
-                const input = document.getElementById("messageText");
-                ws.send(input.value);
-                input.value = '';
-            }
-        </script>
-    </body>
-</html>
-"""
-
-# Debugging route
-
-@app.get("/debug")
-async def debug():
-    return HTMLResponse(html)
-
-
 # Just no security and let user generate a lobby id freely ig
 
 @app.post("/lobby")
 async def get_lobby(request: Request):
     # Get the raw JSON body
     raw_body = await request.body()
-    
+
     # Parse the JSON data
     try:
         json_data = json.loads(raw_body)
@@ -105,7 +57,7 @@ async def get_lobby(request: Request):
 
     while True:
         lobby_id = secrets.token_hex(10)
-        if DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id}):
+        if lobby_id in INMEM_LOBBY:
             # Duplicate lmaoo
             continue
 
@@ -113,7 +65,8 @@ async def get_lobby(request: Request):
 
         try:
             # Initialize with empty data
-            DB_COLLECTIONS["lobbies"].insert_one({"lobby_id": lobby_id, "manual_in": False, "coder_in": False, "locked": False, "difficulty": json_data["difficulty"]})
+
+            INMEM_LOBBY[lobby_id] = {"difficulty": json_data["difficulty"], "sessions": dict()}
             return JSONResponse(content={"lobby_id": lobby_id})
         except Exception as e:
             logging.error(str(e))
@@ -122,151 +75,106 @@ async def get_lobby(request: Request):
 
 @app.websocket("/ws/{lobby_id}")
 async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
-    print("HEY BRO IM INNNNNN")
     await websocket.accept()
-
-    first = False
-    # Scuffed while loop for locking the db
-
-    lobby_info = None
-    while True:
-        lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
-        if not lobby_info:
-            await websocket.close(code=1008, reason="Invalid lobby_id?!")
+    if lobby_id not in INMEM_LOBBY:
+        await websocket.close(code=1008, reason="What the lobby?")
+        return
+    try:
+        # Step 1: Wait for the client to send their session_id
+        session_data = await asyncio.wait_for(websocket.receive_json(), timeout=2.0)
+        session_id = session_data.get("session_id")
+        if not session_id:
+            await websocket.close(code=1008, reason="No session_id provided")
             return
-        
-        # Handle case 2 players in already
-
-        if lobby_info["manual_in"] == True and lobby_info["coder_in"] == True:
-            await websocket.close(code=1008, reason="Lobby is full, bye bye!")
-            return
-        if lobby_info["locked"] == True:
-            continue
-        else:
-            print("I LOCKED THE LOBBY")
-            DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"locked": True}})
-            break
-    
-    my_role = 0
-
-    # If someone already assumes a role, you take the other one
-    if lobby_info["manual_in"] == True:
-        my_role = 1
-
-        # Update the database
-
-        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"coder_in": True}})
-        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"exp": int((time.time() + 300) * 1000)}})
-
-    elif lobby_info["coder_in"] == True:
-        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"manual_in": True}})
-        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"exp": int((time.time() + 300) * 1000)}})
-
+    except asyncio.TimeoutError:
+        await websocket.close(code=1008, reason="No session_id provided")
+        return
+    lobby = INMEM_LOBBY[lobby_id]
+    if session_id in lobby["sessions"]:
+        old_websocket = lobby["sessions"][session_id]
+        print(old_websocket)
+        await old_websocket.close(code=1000, reason="Bro got replaced")
+        lobby["sessions"][session_id] = websocket
+        print(lobby["sessions"][session_id])
+    elif len(lobby["sessions"]) >= 2:
+        await websocket.close(code=1008, reason="You are not welcomed")
+        return
     else:
-        first = True
-        config = generate_bind(lobby_info["difficulty"]) # Assuming Jack is the GOAT no error
-        DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"config": config}})
-        my_role = int(time.time()) % 2
-        if my_role == 0:
-            DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"manual_in": True}})
-        else:
-            DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"coder_in": True}})
+        lobby["sessions"][session_id] = websocket
+        print(lobby["sessions"][session_id])
 
-    # Release the manual lock
+    try:
+        # Step 3: Send role and other initialization data
+        role = "manual" if len(lobby["sessions"]) == 1 else "coder"
+        await websocket.send_json({"type": "role", "data": role})
 
-    DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"locked": False}})
-
-    print("BRO I RELEASED THE LOCKED ALREADYYYYYYYY")
-
-    # ---- That is end of locking code
-
-    # Have a checker loop to wait for the players
-    
-
-    # First send who i am
-
-    await websocket.send_json({"type": "role", "data": "manual" if my_role == 0 else "coder"})
-
-    # Then wait for the other guy
-    if first:
-        while True:
-            print("Waiting for bro to connect")
-            await asyncio.sleep(0.5)  # Use asyncio.sleep instead of time.sleep
-            lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
-            if lobby_info["manual_in"] and lobby_info["coder_in"]:
-                break
-
-    else:
-        while True:
-            print("Make sure config is there")
-            await asyncio.sleep(0.5)  # Use asyncio.sleep instead of time.sleep
-            lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
-            if "config" in lobby_info:
-                break
-
-    # Then I start sending
-
-    lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
-    config = lobby_info["config"]
-
-    pprint(lobby_info)
-
-    # TODO: ensure kevin handles this
-
-    code_data = grab_test_data(lobby_info["difficulty"])
-
-    await websocket.send_json({
-        "type": "start",
-        "end_time": lobby_info["exp"],
-        "config": config,
-        "code_data": code_data
-    })
-
-    DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"config": config}})
-
-    # Both players would have to see this while loop to receive start signal
-
-    while True:
-        try:
-            # Check the status of the database
-
-            lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
-
-            if "purgable" in lobby_info:
-                print("\n\n FINISHED SO I GET THE RESULT LAST\n\n")
-                # This is the case for the second guy
-
-                result = lobby_info["result"]
-                await websocket.send_json({"type": "result", "data": result})
-                await websocket.close(code=1000)
-                # Purge the lobby after submission (Because I'm the second guy)
-
-                DB_COLLECTIONS["lobbies"].delete_many({"lobby_id": lobby_id})
-                return
-            
-            data = await asyncio.wait_for(websocket.receive_json(), timeout=1.0)
-
-            if data["state"] == "submitted":
-                code_data["code"] = data["code"]
-                result = submit_testcase(code_data)
-                logging.info(f"Testcase submitted: {result}")
-
-                # Write to the database
-
-                DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"purgable": True, "result": result}})
-
-                await websocket.send_json({"type": "result", "data": result})
-                await websocket.close(code=1000)
-                break
+        # Step 4: Broadcast to the lobby when both players are connected
+        if len(lobby["sessions"]) == 2:
+            if "game_state" in lobby:
+                await websocket.send_json(lobby["game_state"])
             else:
-                lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
-                if not lobby_info:
-                    await websocket.close(code=1000)
+                lobby["game_state"] = {
+                    "type": "start",
+                    "difficulty": lobby["difficulty"],  # Default difficulty, adjust as needed
+                    "config": generate_bind(0),  # Default difficulty
+                    "code_data": grab_test_data(0),  # Default difficulty
+                    "end_time": int(time.time() + 300) * 1000
+                }
+                for ws in lobby["sessions"].values():
+                    # THIS IS WHERE THE PROBLEM IS
+                    print(ws)
+                    print(ws.state)
+                    print(ws.client_state)
+                    await ws.send_json(lobby["game_state"])
 
-        except asyncio.TimeoutError:
-            continue
-        except Exception as e:
-            print(str(e))
-            await websocket.send_json({"error": str(e), "cooked": True})
-            await websocket.close(code=1000)
-            return
+        # Step 5: Main game loop
+        while True:
+            if (websocket != lobby["sessions"][session_id]):
+                await websocket.close(code=1000, reason="Just died in the loop")
+                return
+            if len(lobby["sessions"]) != 2:
+                await asyncio.sleep(1)
+                continue
+            try:
+                data = await asyncio.wait_for(websocket.receive_json(), timeout=1.0)
+                if data.get("state") == "submitted":
+                    code_data = lobby["game_state"]["code_data"]
+                    code_data["code"] = data.get("code")
+
+                    # Broadcast to render loading screen first for kevin
+                    for id, ws in lobby["sessions"].items():
+                        try:
+                            await ws.send_json({"type": "finished"})
+                        except Exception as e:
+                            del lobby["sessions"][id]
+                            print(e)
+
+
+                    result = submit_testcase(code_data)
+
+                    # The actual result is sent
+                    for id, ws in lobby["sessions"].items():
+                        try:
+                            await ws.send_json({"type": "result", "data": result})
+                        except Exception as e:
+                            del lobby["sessions"][id]
+                            print(e)
+                    break
+            except asyncio.TimeoutError:
+                continue
+            except Exception as e:
+                print("FUCKEEDDDDD")
+                print(f"Error: {e}")
+                break
+    except Exception as e:
+        print("-" * 100)
+        print(f"Unexpected error: {e}")
+        print("-" * 100)
+        return
+
+    # Step 6: Clean up on disconnect
+    for ws in lobby["sessions"].values():
+        await ws.send_json({"type": "ended"})
+        await ws.close(code=1000, reason="done for good")
+    # Purge the lobby
+    del INMEM_LOBBY[lobby_id]
