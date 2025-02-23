@@ -32,7 +32,7 @@ export default function CodeEditor(props: CodeEditorProps) {
 
                 if (!run_keypress_rules(newState, keyString)) {
                     const buffer = get_current_file(newState).buffer;
-                    if (e.key.length === 1) {
+                    if (e.key.length === 1 && newState.type_on_fallback) {
                         type_chars(buffer, e.key);
                     }
                 }

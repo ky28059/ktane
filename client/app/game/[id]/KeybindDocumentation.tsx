@@ -56,6 +56,12 @@ function actionToString(a: Action): string {
         case 'type_chars': return `Types the character(s) \`${a.characters.replaceAll('\n', '[newline]').replaceAll('\t', '[tab]')}\`.`;
         case 'delete': return 'Deletes the character at the cursor.';
         case 'backspace': return 'Deletes the character to the left of the cursor.';
+        case 'do_nothing': return 'Does nothing.';
+        case 'set_fallback': if (a.type_char) {
+            return 'Allows non mapped characters to be typed.';
+        } else {
+            return 'Forbids non mapped characters from being typed.';
+        }
         case 'action_list': return a.actions.map(actionToString).join(', ');
     }
 }

@@ -166,6 +166,7 @@ export type EditorState = {
     serial_number: string,
     remaining_time: number,
     rulebook: Rulebook,
+    type_on_fallback: boolean,
 }
 
 export function get_current_file(state: EditorState): OpenFile {
