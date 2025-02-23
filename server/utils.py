@@ -9,22 +9,32 @@ import itertools
 
 NSJAIL_HOST = "http://host.docker.internal:5001/"
 
-POSSIBLE_MODES = [
-    "square",
-    "cycloid",
-    "taurus",
-    "hypersphere",
-    "triangle",
-    "circle",
-    "dodecahedron",
-    "four leaf clover",
-    "fractal",
-    "pyramid",
-    "rhombus",
-    "pentagon",
-    "dune",
-    "canada",
-]
+# POSSIBLE_MODES = [
+#     "square",
+#     "cycloid",
+#     "taurus",
+#     "hypersphere",
+#     "triangle",
+#     "circle",
+#     "dodecahedron",
+#     "four leaf clover",
+#     "fractal",
+#     "pyramid",
+#     "rhombus",
+#     "pentagon",
+#     "dune",
+#     "canada",
+# ]
+
+class Modes(StrEnum):
+    CAPITAL = "capital mode"
+    VOWEL_MODE = "vowel mode"
+    INSERT_MODE = "insert mode"
+    # all navigation keys are random
+    NAVIGATION = "navigation mode"
+
+def mode_allows_typing(mode: Modes) -> bool:
+    return mode == Modes.CAPITAL or mode == Modes.INSERT_MODE
 
 class Difficulty(IntEnum):
     EASY = 0
@@ -79,6 +89,20 @@ TYPABLE_KEYS = ASCII_KEYCODES + NUMBER_KEYCODES + SPECIAL_KEYCODES_TYPABLE
 
 ALL_KEYS = ASCII_KEYCODES + NUMBER_KEYCODES + F_KEYCODES + SPECIAL_KEYCODES
 
+class KeyTaker:
+    def __init__(self, input):
+        self.keys = [Keypress(key = key) for key in input]
+        random.shuffle(self.keys)
+    
+    def take_proportion(self, proportion):
+        take_amount = int(len(self.keys) * proportion)
+        return self.take(take_amount)
+    
+    def take(self, take_amount):
+        end = self.keys[len(self.keys) - take_amount:]
+        del self.keys[len(self.keys) - take_amount]
+        return end
+
 @dataclass
 class Keypress:
     key: string
@@ -110,13 +134,30 @@ class Keypress:
         return random.choice(ALL_KEYS)
 
     @classmethod
-    def random(cls):
-        return cls(
-            key = cls.random_keycode(),
-            ctrl = random.choice([True, False]),
-            shift = random.choice([True, False]),
-            alt = random.choice([True, False]),
-        )
+    def random(cls, modifier = False):
+        if modifier:
+            ctrl, shift, alt = random.choice([
+                (True, False, False),
+                (False, True, False),
+                (False, False, True),
+                (True, True, False),
+                (True, False, True),
+                (False, True, True),
+                (True, True, True),
+            ])
+            return cls(
+                key = cls.random_keycode(),
+                ctrl = ctrl,
+                shift = shift,
+                alt = alt,
+            )
+        else:
+            return cls(
+                key = cls.random_keycode(),
+                ctrl = random.choice([True, False]),
+                shift = random.choice([True, False]),
+                alt = random.choice([True, False]),
+            )
 
 
 def generate_serial_number():
@@ -165,10 +206,16 @@ class Graph:
                 # no duplicates
                 continue
             
+            # a bit sub optimal n^2 algo prob but good enough
             self.nodes[src_index].edges.append(dst_index)
-            reachable_sets[src_index] = reachable_sets[src_index] | reachable_sets[dst_index]
-            if len(reachable_sets[src_index]) == self.node_count():
-                fully_reachable_count += 1
+
+            for i in range(len(reachable_sets)):
+                if src_index in reachable_sets[i]:
+                    new_set = reachable_sets[i] | reachable_sets[dst_index]
+                    if len(reachable_sets[i]) < self.node_count() and len(new_set) == self.node_count():
+                        fully_reachable_count += 1
+                    
+                    reachable_sets[i] = new_set
     
     def edge_list_index(self) -> List[int]:
         return list(itertools.chain.from_iterable(
@@ -178,11 +225,11 @@ class Graph:
     def edge_list_values(self) -> List[any]:
         return [(self.nodes[src_i].value, self.nodes[dst_i].value) for src_i, dst_i in self.edge_list_index()]
 
-def take_proportion(keys, proportion):
-    take_amount = int(len(keys) * proportion)
-    end = keys[len(keys) - take_amount:]
-    del keys[len(keys) - take_amount]
-    return end
+def mode_enter_trigger(mode):
+    return {
+        'type': 'enter_mode',
+        'mode': str(mode),
+    }
 
 def bin_op(op_type, lhs, rhs):
     return {
@@ -207,7 +254,7 @@ def literal(value):
 def generate_bind(difficulty: Difficulty):
     num_modes = 2 * difficulty + 4
 
-    modes = random.sample(POSSIBLE_MODES, num_modes)
+    modes = [str(mode) for mode in list(Modes)]
     inital_mode = random.choice(modes)
 
     initial_color = random.choice(list(Color))
@@ -229,14 +276,14 @@ def generate_bind(difficulty: Difficulty):
             'trigger': {'type': 'keypress', 'keypress': '-Enter'},
             'action': {'type': 'type_chars', 'characters': '\n'},
         },
-        {
-            'trigger': {'type': 'keypress', 'keypress': '-Delete'},
-            'action': {'type': 'delete'},
-        },
-        {
-            'trigger': {'type': 'keypress', 'keypress': '-Backspace'},
-            'action': {'type': 'backspace'},
-        },
+        # {
+        #     'trigger': {'type': 'keypress', 'keypress': '-Delete'},
+        #     'action': {'type': 'delete'},
+        # },
+        # {
+        #     'trigger': {'type': 'keypress', 'keypress': '-Backspace'},
+        #     'action': {'type': 'backspace'},
+        # },
         {
             'trigger': {'type': 'keypress', 'keypress': '-ArrowUp'},
             'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': -1},
@@ -274,11 +321,9 @@ def generate_bind(difficulty: Difficulty):
             'test': bin_op('equals', state_val('background'), literal(src_color)),
             'action': {'type': 'change_bg', 'color': str(dst_color)},
         })
-    
-    typable_keypress = [Keypress(key = key) for key in TYPABLE_KEYS]
-    random.shuffle(typable_keypress)
 
-    for keypress in take_proportion(typable_keypress, 0.1 + 0.03 * difficulty):
+    # keys that delete based on position
+    for keypress in KeyTaker(TYPABLE_KEYS).take_proportion(0.1 + 0.03 * difficulty):
         if random.choice([True, False]):
             pos_source = 'line_num'
         else:
@@ -290,6 +335,64 @@ def generate_bind(difficulty: Difficulty):
             'trigger': keypress.to_trigger(),
             'test': bin_op('equals', bin_op('mod', state_val(pos_source), literal(mod_val)), literal(random.randrange(0, 20) % mod_val)),
             'action': {'type': 'delete'},
+        })
+    
+    # vowel mode
+    for i, keypress in enumerate(KeyTaker(TYPABLE_KEYS).take(15)):
+        n = i % 5
+        match i % 5:
+            case 0:
+                letter = 'a'
+            case 1:
+                letter = 'e'
+            case 2:
+                letter = 'i'
+            case 3:
+                letter = 'o'
+            case 4:
+                letter = 'u'
+        
+        if i >= 10:
+            letter = letter.upper()
+        
+        rules.append({
+            'trigger': keypress.to_trigger(),
+            'test': bin_op('equals', state_val('mode'), literal(str(Modes.VOWEL_MODE))),
+            'action': {
+                'type': 'type_chars',
+                'characters': letter,
+            },
+        })
+    
+    # ban vowels in insert mode
+    for letter in 'aeiou':
+        rules.append({
+            'trigger': Keypress(key = letter).to_trigger(),
+            'test': bin_op('not_equals', state_val('mode'), literal(str(Modes.VOWEL_MODE))),
+            'action': {
+                'type': 'do_nothing',
+            },
+        })
+    
+    # navigation keys in navigation mode
+    for keypress in KeyTaker(ALL_KEYS).take(12):
+        rules.append({
+            'trigger': keypress.to_trigger(),
+            'test': bin_op('equals', state_val('mode'), literal(str(Modes.NAVIGATION))),
+            'action': {
+                'type': 'move_cursor',
+                'x_offset': random.randint(-10, 10),
+                'y_offset': random.randint(-10, 10),
+            },
+        })
+    
+    for mode in list(Modes):
+        rules.append({
+            'trigger': mode_enter_trigger(mode),
+            'action': {
+                'type': 'set_fallback',
+                'type_char': mode_allows_typing(mode),
+            },
         })
 
     # TODO: actual logic of keybind generation

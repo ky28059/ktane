@@ -12,7 +12,7 @@ export type GameConfig = {
 }
 
 export function parse_config(config: GameConfig): EditorState {
-    return {
+    const out = {
         open_files: [
             {
                 filename: "main.py",
@@ -31,8 +31,13 @@ export function parse_config(config: GameConfig): EditorState {
         buffer_index: 0,
         serial_number: config.serial_number,
         remaining_time: config.total_time,
+        type_on_fallback: true,
         rulebook: rulebook_from_rule_list(config.rules),
     };
+
+    run_mode_change_rules(out, config.initial_mode);
+
+    return out;
 }
 
 export type Rule = {
@@ -60,12 +65,14 @@ export type RuleAndTrigger = Rule & {
 export type Rulebook = {
     // string represents key and ctrl and alt modifier keys
     keypress_rules: Record<string, Rule[]>,
+    mode_change_rules: Record<string, Rule[]>,
     event_rules: Rule[],
 }
 
 function rulebook_from_rule_list(rules: RuleAndTrigger[]): Rulebook {
     const rulebook: Rulebook = {
         keypress_rules: {},
+        mode_change_rules: {},
         event_rules: [],
     };
 
@@ -76,6 +83,13 @@ function rulebook_from_rule_list(rules: RuleAndTrigger[]): Rulebook {
                     rulebook.keypress_rules[rule.trigger.keypress].push(rule);
                 } else {
                     rulebook.keypress_rules[rule.trigger.keypress] = [rule];
+                }
+                break;
+            case 'enter_mode':
+                if (rulebook.mode_change_rules[rule.trigger.mode]) {
+                    rulebook.mode_change_rules[rule.trigger.mode].push(rule);
+                } else {
+                    rulebook.mode_change_rules[rule.trigger.mode] = [rule];
                 }
                 break;
             case 'event_trigger':
@@ -101,6 +115,15 @@ export function run_keypress_rules(state: EditorState, keypress: string): boolea
     });
 
     return rule_matched;
+}
+
+export function run_mode_change_rules(state: EditorState, mode: string) {
+    const rule_eval_context = {
+        editor_state: state,
+        buffer: get_current_file(state).buffer,
+    };
+
+    state.rulebook.mode_change_rules[mode]?.forEach(rule => eval_rule(rule_eval_context, rule));
 }
 
 export function run_event_rule(state: EditorState) {
@@ -137,12 +160,17 @@ export function event_to_keystring(event: KeyboardEvent) {
     return out + "-" + event.code;
 }
 
+export type EnterModeTrigger = {
+    type: 'enter_mode',
+    mode: string,
+}
+
 // one event is randomly picked every so often
 export type EventTrigger = {
     type: 'event_trigger',
 }
 
-export type Trigger = KeypressTrigger | EventTrigger
+export type Trigger = KeypressTrigger | EnterModeTrigger | EventTrigger
 
 // values returned by expressions
 export type Value = number | string | boolean
@@ -347,12 +375,21 @@ export type BackspaceAction = {
     type: 'backspace',
 }
 
+export type DoNothingAction = {
+    type: 'do_nothing',
+}
+
+export type SetFallbackBehavior = {
+    type: 'set_fallback',
+    type_char: boolean,
+}
+
 export type ActionList = {
     type: 'action_list',
     actions: Action[],
 }
 
-export type Action = DieAction | TypeCharsAction | SubmitAction | ChangeBackgroundAction | ChangeModeAction | MoveCursurAction | DeleteAction | BackspaceAction | ActionList
+export type Action = DieAction | TypeCharsAction | SubmitAction | ChangeBackgroundAction | ChangeModeAction | MoveCursurAction | DeleteAction | BackspaceAction | DoNothingAction | SetFallbackBehavior | ActionList
 
 function do_action(state: RuleEvalContext, action: Action) {
     const buffer = context_get_buffer(state);
@@ -372,6 +409,7 @@ function do_action(state: RuleEvalContext, action: Action) {
             break;
         case 'change_mode':
             buffer.mode = action.mode;
+            run_mode_change_rules(state.editor_state, action.mode);
             break;
         case 'move_cursor':
             move_cursor(buffer, action.x_offset, action.y_offset);
@@ -381,6 +419,11 @@ function do_action(state: RuleEvalContext, action: Action) {
             break;
         case 'backspace':
             backspace(buffer);
+            break;
+        case 'do_nothing':
+            break;
+        case 'set_fallback':
+            state.editor_state.type_on_fallback = action.type_char;
             break;
         case 'action_list':
             action.actions.forEach(action => do_action(state, action));
