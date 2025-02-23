@@ -25,7 +25,8 @@ def generate_template(difficulty: Difficulty, num: int) -> dict:
         weights = [0.1, 0.8]
     elif difficulty == Difficulty.HARD:
         weights = [0.2, 1]
-    for i in range(num):
+    i = 0
+    while i < num:
         r = randint(0, RANGE)
         if r < weights[0] * RANGE:
             test_num, test_content = generate(Difficulty.HARD)
@@ -33,7 +34,13 @@ def generate_template(difficulty: Difficulty, num: int) -> dict:
             test_num, test_content = generate(Difficulty.MEDIUM)
         else:
             test_num, test_content = generate(Difficulty.EASY)
-        template["nums"][str(i)] = (test_num)
-        template["template"] += test_content + "\n"
+        exists = False
+        for key in template["nums"].keys():
+            if (test_num) == template["nums"][key]:
+                exists = True
+        if (not exists):
+            template["nums"][str(i)] = (test_num)
+            template["template"] += test_content + "\n"
+            i += 1
     
     return template
