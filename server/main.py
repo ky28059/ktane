@@ -13,11 +13,8 @@ import traceback
 from websockets.protocol import State  # Import State to check if it's open
 
 
-
 DB_COLLECTIONS = get_collections()
-
 GLOBAL_LOCK = asyncio.Lock()
-
 INMEM_LOBBY = {}
 
 app = FastAPI()
@@ -38,14 +35,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# Debugging route
-
-@app.get("/debug")
-async def debug():
-    return HTMLResponse("hi")
-
 
 # Just no security and let user generate a lobby id freely ig
 
@@ -125,8 +114,9 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
                 await websocket.send_json(lobby["game_state"])
             else:
                 lobby["game_state"] = {
+                    "type": "start",
                     "difficulty": lobby["difficulty"],  # Default difficulty, adjust as needed
-                    "bind": generate_bind(0),  # Default difficulty
+                    "config": generate_bind(0),  # Default difficulty
                     "code_data": grab_test_data(0),  # Default difficulty
                     "end_time": int(time.time() + 300) * 1000
                 }
