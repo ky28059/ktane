@@ -30,7 +30,7 @@ export default function CodePlayerInterface(props: CodePlayerInterfaceProps) {
     }, [props.timeLeft]);
 
     return (
-        <div className="flex h-screen">
+        <div className="flex h-screen [color-scheme:_dark]">
             <CodeEditor {...props} />
             <Console />
 
