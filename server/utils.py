@@ -113,6 +113,9 @@ class GraphNode:
     value: any
     edges: List[int]
 
+    def has_edge_to(self, dst_index):
+        return dst_index in self.edges
+
 @dataclass
 class Graph:
     nodes: List[GraphNode]
@@ -126,6 +129,10 @@ class Graph:
     
     def random_node_index(self):
         return random.randrange(0, self.node_count())
+    
+    def has_edge(self, edge):
+        src_i, dst_i = edge
+        return self.nodes[src_i].has_edge_to(dst_i)
 
     # generates random edges until every node is reachable from every other node
     def random_edges_fully_connected(self):
@@ -139,6 +146,10 @@ class Graph:
             # ensure src and dst are distinct
             while src_index == dst_index:
                 dst_index = self.random_node_index()
+            
+            if self.has_edge((src_index, dst_index)):
+                # no duplicates
+                continue
             
             self.nodes[src_index].edges.append(dst_index)
             reachable_sets[src_index] = reachable_sets[src_index] | reachable_sets[dst_index]
