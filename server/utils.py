@@ -28,7 +28,6 @@ NSJAIL_HOST = "http://host.docker.internal:5001/"
 
 class Modes(StrEnum):
     CAPITAL = "capital mode"
-    VOWEL_MODE = "vowel mode"
     INSERT_MODE = "insert mode"
     # all navigation keys are random
     NAVIGATION = "navigation mode"
@@ -84,7 +83,8 @@ SPECIAL_KEYCODES_UNTYPABLE = [
     'CapsLock',
     'Home',
     'End',
-    'Insert',
+    # Many laptop don't have an insert key
+    # 'Insert',
     'Delete',
     'ArrowUp',
     'ArrowDown',
@@ -288,10 +288,10 @@ def generate_bind(difficulty: Difficulty):
             'trigger': {'type': 'keypress', 'keypress': '-Delete'},
             'action': {'type': 'delete'},
         },
-        # {
-        #     'trigger': {'type': 'keypress', 'keypress': '-Backspace'},
-        #     'action': {'type': 'backspace'},
-        # },
+        {
+            'trigger': {'type': 'keypress', 'keypress': '-Backspace'},
+            'action': {'type': 'backspace'},
+        },
         # {
         #     'trigger': {'type': 'keypress', 'keypress': '-ArrowUp'},
         #     'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': -1},
@@ -346,43 +346,6 @@ def generate_bind(difficulty: Difficulty):
             'trigger': keypress_modifier.to_trigger(),
             'test': bin_op('equals', bin_op('mod', state_val(pos_source), literal(mod_val)), literal(random.randrange(0, 20) % mod_val)),
             'action': {'type': 'delete'},
-        })
-    
-    # vowel mode
-    for i, keypress in enumerate(KeyTaker(TYPABLE_KEYS).take(15)):
-        n = i % 5
-        match i % 5:
-            case 0:
-                letter = 'a'
-            case 1:
-                letter = 'e'
-            case 2:
-                letter = 'i'
-            case 3:
-                letter = 'o'
-            case 4:
-                letter = 'u'
-        
-        if i >= 10:
-            letter = letter.upper()
-        
-        rules.append({
-            'trigger': keypress.to_trigger(),
-            'test': bin_op('equals', state_val('mode'), literal(str(Modes.VOWEL_MODE))),
-            'action': {
-                'type': 'type_chars',
-                'characters': letter,
-            },
-        })
-    
-    # ban vowels in insert mode
-    for letter in 'aeiou':
-        rules.append({
-            'trigger': Keypress(key = letter).to_trigger(),
-            'test': bin_op('not_equals', state_val('mode'), literal(str(Modes.VOWEL_MODE))),
-            'action': {
-                'type': 'do_nothing',
-            },
         })
     
     # navigation keys in navigation mode
