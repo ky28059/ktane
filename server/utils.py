@@ -9,22 +9,39 @@ import itertools
 
 NSJAIL_HOST = "http://host.docker.internal:5001/"
 
-POSSIBLE_MODES = [
-    "square",
-    "cycloid",
-    "taurus",
-    "hypersphere",
-    "triangle",
-    "circle",
-    "dodecahedron",
-    "four leaf clover",
-    "fractal",
-    "pyramid",
-    "rhombus",
-    "pentagon",
-    "dune",
-    "canada",
-]
+# POSSIBLE_MODES = [
+#     "square",
+#     "cycloid",
+#     "taurus",
+#     "hypersphere",
+#     "triangle",
+#     "circle",
+#     "dodecahedron",
+#     "four leaf clover",
+#     "fractal",
+#     "pyramid",
+#     "rhombus",
+#     "pentagon",
+#     "dune",
+#     "canada",
+# ]
+
+class Modes(StrEnum):
+    CAPITAL = "capital mode"
+    INSERT_MODE = "insert mode"
+    # all navigation keys are random
+    NAVIGATION = "navigation mode"
+
+def mode_allows_typing(mode: Modes) -> bool:
+    return mode == Modes.CAPITAL or mode == Modes.INSERT_MODE
+
+def mode_filter(mode: Modes):
+    if mode == Modes.CAPITAL:
+        return 'uppercase'
+    elif mode == Modes.INSERT_MODE:
+        return 'lowercase'
+    else:
+        return None
 
 class Difficulty(IntEnum):
     EASY = 0
@@ -41,7 +58,8 @@ class Color(StrEnum):
 ASCII_KEYCODES = [f'Key{l}' for l in string.ascii_uppercase]
 NUMBER_KEYCODES = [f'Digit{i}' for i in range(9)]
 F_KEYCODES = [f'F{i}' for i in range(1, 13)]
-SPECIAL_KEYCODES = [
+
+SPECIAL_KEYCODES_TYPABLE = [
     'Minus',
     'Equal',
     'BracketLeft',
@@ -52,31 +70,54 @@ SPECIAL_KEYCODES = [
     'Comma',
     'Period',
     'Slash',
-    'Enter',
-    'Backspace',
-    'ShiftLeft',
-    'ShiftRight',
-    'Tab',
-    'CapsLock',
+    'Space',
     'Backquote',
+    'Tab',
+    'Enter',
+]
+
+SPECIAL_KEYCODES_UNTYPABLE = [
+    # 'Backspace',
+    # These are impossible to type
+    # 'ShiftLeft',
+    # 'ShiftRight',
+    'CapsLock',
     'Home',
     'End',
-    'Insert',
-    'Delete',
+    # Many laptop don't have an insert key
+    # 'Insert',
+    # 'Delete',
     'ArrowUp',
     'ArrowDown',
     'ArrowLeft',
     'ArrowRight',
 ]
 
+SPECIAL_KEYCODES = SPECIAL_KEYCODES_TYPABLE + SPECIAL_KEYCODES_UNTYPABLE
+TYPABLE_KEYS = ASCII_KEYCODES + NUMBER_KEYCODES + SPECIAL_KEYCODES_TYPABLE
+
 ALL_KEYS = ASCII_KEYCODES + NUMBER_KEYCODES + F_KEYCODES + SPECIAL_KEYCODES
+
+class KeyTaker:
+    def __init__(self, input):
+        self.keys = [Keypress(key = key) for key in input]
+        random.shuffle(self.keys)
+    
+    def take_proportion(self, proportion):
+        take_amount = int(len(self.keys) * proportion)
+        return self.take(take_amount)
+    
+    def take(self, take_amount):
+        end = self.keys[len(self.keys) - take_amount:]
+        del self.keys[len(self.keys) - take_amount]
+        return end
 
 @dataclass
 class Keypress:
     key: string
-    ctrl: bool
-    shift: bool
-    alt: bool
+    ctrl: bool = False
+    shift: bool = False
+    alt: bool = False
 
     def to_key_string(self):
         out = ''
@@ -90,19 +131,42 @@ class Keypress:
             out += 'A'
         
         return out + '-' + self.key
+
+    def to_trigger(self):
+        return {
+            'type': 'keypress',
+            'keypress': self.to_key_string(),
+        }
     
     @staticmethod
     def random_keycode():
         return random.choice(ALL_KEYS)
 
     @classmethod
-    def random(cls):
-        return cls(
-            key = cls.random_keycode(),
-            ctrl = random.choice([True, False]),
-            shift = random.choice([True, False]),
-            alt = random.choice([True, False]),
-        )
+    def random(cls, modifier = False):
+        if modifier:
+            ctrl, shift, alt = random.choice([
+                (True, False, False),
+                (False, True, False),
+                (False, False, True),
+                (True, True, False),
+                (True, False, True),
+                (False, True, True),
+                (True, True, True),
+            ])
+            return cls(
+                key = cls.random_keycode(),
+                ctrl = ctrl,
+                shift = shift,
+                alt = alt,
+            )
+        else:
+            return cls(
+                key = cls.random_keycode(),
+                ctrl = random.choice([True, False]),
+                shift = random.choice([True, False]),
+                alt = random.choice([True, False]),
+            )
 
 
 def generate_serial_number():
@@ -112,6 +176,9 @@ def generate_serial_number():
 class GraphNode:
     value: any
     edges: List[int]
+
+    def has_edge_to(self, dst_index):
+        return dst_index in self.edges
 
 @dataclass
 class Graph:
@@ -126,6 +193,10 @@ class Graph:
     
     def random_node_index(self):
         return random.randrange(0, self.node_count())
+    
+    def has_edge(self, edge):
+        src_i, dst_i = edge
+        return self.nodes[src_i].has_edge_to(dst_i)
 
     # generates random edges until every node is reachable from every other node
     def random_edges_fully_connected(self):
@@ -140,10 +211,20 @@ class Graph:
             while src_index == dst_index:
                 dst_index = self.random_node_index()
             
+            if self.has_edge((src_index, dst_index)):
+                # no duplicates
+                continue
+            
+            # a bit sub optimal n^2 algo prob but good enough
             self.nodes[src_index].edges.append(dst_index)
-            reachable_sets[src_index] = reachable_sets[src_index] | reachable_sets[dst_index]
-            if len(reachable_sets[src_index]) == self.node_count():
-                fully_reachable_count += 1
+
+            for i in range(len(reachable_sets)):
+                if src_index in reachable_sets[i]:
+                    new_set = reachable_sets[i] | reachable_sets[dst_index]
+                    if len(reachable_sets[i]) < self.node_count() and len(new_set) == self.node_count():
+                        fully_reachable_count += 1
+                    
+                    reachable_sets[i] = new_set
     
     def edge_list_index(self) -> List[int]:
         return list(itertools.chain.from_iterable(
@@ -153,10 +234,36 @@ class Graph:
     def edge_list_values(self) -> List[any]:
         return [(self.nodes[src_i].value, self.nodes[dst_i].value) for src_i, dst_i in self.edge_list_index()]
 
+def mode_enter_trigger(mode):
+    return {
+        'type': 'enter_mode',
+        'mode': str(mode),
+    }
+
+def bin_op(op_type, lhs, rhs):
+    return {
+        'type': 'bin_op',
+        'op_type': op_type,
+        'lhs': lhs,
+        'rhs': rhs,
+    }
+
+def state_val(value):
+    return {
+        'type': 'state_value',
+        'val': value,
+    }
+
+def literal(value):
+    return {
+        'type': 'literal',
+        'val': value,
+    }
+
 def generate_bind(difficulty: Difficulty):
     num_modes = 2 * difficulty + 4
 
-    modes = random.sample(POSSIBLE_MODES, num_modes)
+    modes = [str(mode) for mode in list(Modes)]
     inital_mode = random.choice(modes)
 
     initial_color = random.choice(list(Color))
@@ -169,11 +276,11 @@ def generate_bind(difficulty: Difficulty):
     color_graph.random_edges_fully_connected()
 
     rules = [
-        {
-            'trigger': {'type': 'keypress', 'keypress': '-KeyA'},
-            'test': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'background'}, 'rhs': {'type': 'literal', 'val': 'purple'}},
-            'action': {'type': 'type_chars', 'characters': 'lmao u suck'}
-        },
+        # {
+        #     'trigger': {'type': 'keypress', 'keypress': '-KeyA'},
+        #     'test': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'background'}, 'rhs': {'type': 'literal', 'val': 'purple'}},
+        #     'action': {'type': 'type_chars', 'characters': 'lmao u suck'}
+        # },
         {
             'trigger': {'type': 'keypress', 'keypress': '-Enter'},
             'action': {'type': 'type_chars', 'characters': '\n'},
@@ -186,40 +293,102 @@ def generate_bind(difficulty: Difficulty):
             'trigger': {'type': 'keypress', 'keypress': '-Backspace'},
             'action': {'type': 'backspace'},
         },
-        {
-            'trigger': {'type': 'keypress', 'keypress': '-ArrowUp'},
-            'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': -1},
-        },
-        {
-            'trigger': {'type': 'keypress', 'keypress': '-ArrowDown'},
-            'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': 1},
-        },
-        {
-            'trigger': {'type': 'keypress', 'keypress': '-ArrowLeft'},
-            'action': {'type': 'move_cursor', 'x_offset': -1, 'y_offset': 0},
-        },
-        {
-            'trigger': {'type': 'keypress', 'keypress': '-ArrowRight'},
-            'action': {'type': 'move_cursor', 'x_offset': 1, 'y_offset': 0},
-        },
+        # {
+        #     'trigger': {'type': 'keypress', 'keypress': '-ArrowUp'},
+        #     'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': -1},
+        # },
+        # {
+        #     'trigger': {'type': 'keypress', 'keypress': '-ArrowDown'},
+        #     'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': 1},
+        # },
+        # {
+        #     'trigger': {'type': 'keypress', 'keypress': '-ArrowLeft'},
+        #     'action': {'type': 'move_cursor', 'x_offset': -1, 'y_offset': 0},
+        # },
+        # {
+        #     'trigger': {'type': 'keypress', 'keypress': '-ArrowRight'},
+        #     'action': {'type': 'move_cursor', 'x_offset': 1, 'y_offset': 0},
+        # },
         {
             'trigger': {'type': 'keypress', 'keypress': '-Tab'},
             'action': {'type': 'type_chars', 'characters': '    '},
         },
     ]
 
+    # mode keybinds
     for src_mode, dst_mode in mode_graph.edge_list_values():
         rules.append({
-            'trigger': {'type': 'keypress', 'keypress': Keypress.random().to_key_string()},
-            'test': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'mode'}, 'rhs': {'type': 'literal', 'val': src_mode}},
+            'trigger': Keypress.random().to_trigger(),
+            'test': bin_op('equals', state_val('mode'), literal(src_mode)),
             'action': {'type': 'change_mode', 'mode': dst_mode},
         })
     
+    # color keybinds
     for src_color, dst_color in color_graph.edge_list_values():
         rules.append({
-            'trigger': {'type': 'keypress', 'keypress': Keypress.random().to_key_string()},
-            'test': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'background'}, 'rhs': {'type': 'literal', 'val': str(src_color)}},
+            'trigger': Keypress.random().to_trigger(),
+            'test': bin_op('equals', state_val('background'), literal(src_color)),
             'action': {'type': 'change_bg', 'color': str(dst_color)},
+        })
+
+    # keys that delete based on position
+    for keypress in KeyTaker(TYPABLE_KEYS).take_proportion(0.1 + 0.03 * difficulty):
+        if random.choice([True, False]):
+            pos_source = 'line_num'
+        else:
+            pos_source = 'column_num'
+        
+        keypress_modifier = Keypress.random(modifier = True)
+        keypress_modifier.key = keypress.key
+        
+        mod_val = random.randrange(2, 8)
+
+        rules.append({
+            'trigger': keypress_modifier.to_trigger(),
+            'test': bin_op('equals', bin_op('mod', state_val(pos_source), literal(mod_val)), literal(random.randrange(0, 20) % mod_val)),
+            'action': {'type': 'delete'},
+        })
+    
+    # navigation keys in navigation mode
+    for i, keypress in enumerate(KeyTaker(ALL_KEYS).take(4)):
+        x_offset = 0
+        y_offset = 0
+
+        match i:
+            case 0:
+                x_offset = -1
+            case 1:
+                x_offset = 1
+            case 2:
+                y_offset = -1
+            case 3:
+                y_offset = 1
+
+        rules.append({
+            'trigger': keypress.to_trigger(),
+            'test': bin_op('equals', state_val('mode'), literal(str(Modes.NAVIGATION))),
+            'action': {
+                'type': 'move_cursor',
+                'x_offset': x_offset,
+                'y_offset': y_offset,
+            },
+        })
+    
+    for mode in list(Modes):
+        rules.append({
+            'trigger': mode_enter_trigger(mode),
+            'action': {
+                'type': 'set_fallback',
+                'type_char': mode_allows_typing(mode),
+            },
+        })
+
+        rules.append({
+            'trigger': mode_enter_trigger(mode),
+            'action': {
+                'type': 'set_filter',
+                'filter_name': mode_filter(mode),
+            },
         })
 
     # TODO: actual logic of keybind generation

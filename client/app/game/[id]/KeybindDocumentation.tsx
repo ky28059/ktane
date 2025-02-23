@@ -6,7 +6,7 @@ export default function KeybindDocumentation(props: RuleAndTrigger) {
 
     return (
         <div className="flex gap-8 mb-10">
-            <div className="w-36">
+            <div className="w-48">
                 <code className="text-xl bg-black/5 rounded px-2 py-1 h-max">
                     {props.trigger.keypress}
                 </code>
@@ -56,6 +56,17 @@ function actionToString(a: Action): string {
         case 'type_chars': return `Types the character(s) \`${a.characters.replaceAll('\n', '[newline]').replaceAll('\t', '[tab]')}\`.`;
         case 'delete': return 'Deletes the character at the cursor.';
         case 'backspace': return 'Deletes the character to the left of the cursor.';
+        case 'do_nothing': return 'Does nothing.';
+        case 'set_fallback': if (a.type_char) {
+            return 'Allows non mapped characters to be typed.';
+        } else {
+            return 'Forbids non mapped characters from being typed.';
+        }
+        case 'set_filter': if (a.filter_name) {
+            return `Sets the current filter to ${a.filter_name}.`;
+        } else {
+            return 'Clears the current filter.';
+        }
         case 'action_list': return a.actions.map(actionToString).join(', ');
     }
 }

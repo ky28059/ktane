@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Duration } from 'luxon';
+import { get_active_filter } from '@/utils/editor_state';
 
 // Components
 import SyntaxHighlighter from '@/components/SyntaxHighlighter';
@@ -32,8 +33,10 @@ export default function CodeEditor(props: CodeEditorProps) {
 
                 if (!run_keypress_rules(newState, keyString)) {
                     const buffer = get_current_file(newState).buffer;
-                    if (e.key.length === 1) {
-                        type_chars(buffer, e.key);
+                    if (e.key.length === 1 && newState.type_on_fallback) {
+                        const key = get_active_filter(newState)?.filter(e.key) ?? e.key;
+                        console.log(get_active_filter(newState));
+                        type_chars(buffer, key);
                     }
                 }
 
