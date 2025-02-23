@@ -9,7 +9,7 @@ import CodePlayerInterface from '@/app/game/[id]/CodePlayerInterface';
 import ResultsDisplay from '@/app/game/[id]/ResultsDisplay';
 
 // Utils
-import { BinaryOp, GameConfig, StateValue } from '@/utils/rules';
+import type { GameConfig } from '@/utils/rules';
 
 
 type PlayerInterfaceProps = {
@@ -20,6 +20,7 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     const [role, setRole] = useState<'manual' | 'coder'>('manual');
 
     const [finished, setFinished] = useState(false);
+    const [codeData, setCodeData] = useState<CodeData['nums'] | null>(null);
     const [results, setResults] = useState<TestData | null>(null);
 
     const endDate = useRef<DateTime>(DateTime.now());
@@ -35,6 +36,7 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
             switch (res.type) {
                 case 'start':
                     setConfig({ ...res.config, code: res.code_data.template });
+                    setCodeData(res.code_data.nums);
                     endDate.current = DateTime.fromMillis(res.end_time);
                     break;
                 case 'role':
@@ -112,7 +114,10 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     )
 
     if (finished) return (
-        <ResultsDisplay />
+        <ResultsDisplay
+            codeData={codeData!}
+            results={results}
+        />
     )
 
     return (
