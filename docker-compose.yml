@@ -21,4 +21,11 @@ services:
       - 3000:3000
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   
