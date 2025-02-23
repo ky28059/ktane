@@ -267,11 +267,11 @@ def generate_bind(difficulty: Difficulty):
     color_graph.random_edges_fully_connected()
 
     rules = [
-        {
-            'trigger': {'type': 'keypress', 'keypress': '-KeyA'},
-            'test': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'background'}, 'rhs': {'type': 'literal', 'val': 'purple'}},
-            'action': {'type': 'type_chars', 'characters': 'lmao u suck'}
-        },
+        # {
+        #     'trigger': {'type': 'keypress', 'keypress': '-KeyA'},
+        #     'test': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'background'}, 'rhs': {'type': 'literal', 'val': 'purple'}},
+        #     'action': {'type': 'type_chars', 'characters': 'lmao u suck'}
+        # },
         {
             'trigger': {'type': 'keypress', 'keypress': '-Enter'},
             'action': {'type': 'type_chars', 'characters': '\n'},
@@ -284,22 +284,22 @@ def generate_bind(difficulty: Difficulty):
         #     'trigger': {'type': 'keypress', 'keypress': '-Backspace'},
         #     'action': {'type': 'backspace'},
         # },
-        {
-            'trigger': {'type': 'keypress', 'keypress': '-ArrowUp'},
-            'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': -1},
-        },
-        {
-            'trigger': {'type': 'keypress', 'keypress': '-ArrowDown'},
-            'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': 1},
-        },
-        {
-            'trigger': {'type': 'keypress', 'keypress': '-ArrowLeft'},
-            'action': {'type': 'move_cursor', 'x_offset': -1, 'y_offset': 0},
-        },
-        {
-            'trigger': {'type': 'keypress', 'keypress': '-ArrowRight'},
-            'action': {'type': 'move_cursor', 'x_offset': 1, 'y_offset': 0},
-        },
+        # {
+        #     'trigger': {'type': 'keypress', 'keypress': '-ArrowUp'},
+        #     'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': -1},
+        # },
+        # {
+        #     'trigger': {'type': 'keypress', 'keypress': '-ArrowDown'},
+        #     'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': 1},
+        # },
+        # {
+        #     'trigger': {'type': 'keypress', 'keypress': '-ArrowLeft'},
+        #     'action': {'type': 'move_cursor', 'x_offset': -1, 'y_offset': 0},
+        # },
+        # {
+        #     'trigger': {'type': 'keypress', 'keypress': '-ArrowRight'},
+        #     'action': {'type': 'move_cursor', 'x_offset': 1, 'y_offset': 0},
+        # },
         {
             'trigger': {'type': 'keypress', 'keypress': '-Tab'},
             'action': {'type': 'type_chars', 'characters': '    '},
