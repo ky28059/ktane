@@ -14,9 +14,23 @@ DB_COLLECTIONS = get_collections()
 
 app = FastAPI()
 
+origins = [
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Configure CORS
 origins = [
     "http://localhost:3000",
+    "http://host.docker.internal:3000",
+    "*"
     # TODO: prod endpoint
 ]
 
