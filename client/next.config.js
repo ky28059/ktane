@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     env: {
-        API_BASE: `http://ctf.b01lers.com:8000`,
-        WS_BASE: `ws://ctf.b01lers.com:8000/ws`,
+        API_BASE: `https://ktane-backend.b01le.rs`,
+        WS_BASE: `wss://ktane-backend.b01le.rs/ws`,
     },
     logging: {
         fetches: {
