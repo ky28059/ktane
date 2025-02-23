@@ -17,31 +17,35 @@ type PlayerInterfaceProps = {
 export default function PlayerInterface(props: PlayerInterfaceProps) {
     const [config, setConfig] = useState<GameConfig | null>(null);
     const [role, setRole] = useState<'manual' | 'coder'>('manual');
+    const [finished, setFinished] = useState(false);
 
     const endDate = useRef<DateTime>(DateTime.now());
+    const ws = useRef<WebSocket>(null);
 
     useEffect(() => {
-        const ws = new WebSocket(`${process.env.WS_BASE!}/${props.id}`);
+        ws.current = new WebSocket(`${process.env.WS_BASE!}/${props.id}`);
 
-        ws.addEventListener('message', (m: MessageEvent<string>) => {
+        ws.current.addEventListener('message', (m: MessageEvent<string>) => {
             console.log(m.data, typeof m.data);
             const res = JSON.parse(m.data) as BackendMessage;
 
             switch (res.type) {
                 case 'start':
-                    endDate.current = DateTime.fromMillis(res.end_time)
+                    setConfig({ ...res.config, code: res.code_data.template });
+                    endDate.current = DateTime.fromMillis(res.end_time);
                     break;
-                case 'config':
-                    return setConfig(res.data);
-                case 'code_data':
-                    return // ...
                 case 'role':
                     return setRole(res.data);
             }
         });
 
-        return () => ws.close();
+        return () => ws.current?.close();
     }, []);
+
+    function submitCode(code: string) {
+        ws.current?.send(JSON.stringify({ state: 'submitted', code }));
+        setFinished(true);
+    }
 
     // Hydration error workaround
     const [joinHref, setJoinHref] = useState('');
@@ -99,6 +103,12 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
         </div>
     )
 
+    if (finished) return (
+        <div className="bg-black flex flex-col gap-2 items-center justify-center h-screen text-white">
+            hello
+        </div>
+    )
+
     return (
         <div>
             <audio
@@ -118,23 +128,14 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
                 <CodePlayerInterface
                     config={config}
                     timeLeft={timeLeft}
+                    submitCode={submitCode}
                 />
             )}
         </div>
     )
 }
 
-type BackendMessage = ConfigMessage | CodeDataMessage | RoleMessage | StartMessage
-
-type ConfigMessage = {
-    type: 'config',
-    data: GameConfig
-}
-
-type CodeDataMessage = {
-    type: 'code_data',
-    data: {} // TODO
-}
+type BackendMessage = RoleMessage | StartMessage
 
 type RoleMessage = {
     type: 'role',
@@ -143,5 +144,16 @@ type RoleMessage = {
 
 type StartMessage = {
     type: 'start',
-    end_time: number // epoch ms
+    end_time: number, // epoch ms
+    config: GameConfig,
+    code_data: CodeData
+}
+
+type FinishMessage = {
+    type: 'finish'
+}
+
+export type CodeData = {
+    nums: { [key: string]: [difficulty: 'easy' | 'medium' | 'hard', number, fn: string] },
+    template: string
 }

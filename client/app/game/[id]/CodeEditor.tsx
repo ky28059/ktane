@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react';
+import { Duration } from 'luxon';
 
 // Components
 import SyntaxHighlighter from '@/components/SyntaxHighlighter';
@@ -12,10 +13,13 @@ import { get_current_file, type_chars } from '@/utils/editor_state';
 
 
 type CodeEditorProps = {
-    config: GameConfig
+    config: GameConfig,
+    timeLeft: Duration,
+    submitCode: (c: string) => void
 }
 export default function CodeEditor(props: CodeEditorProps) {
     const [editorState, setEditorState] = useState(parse_config(props.config));
+    const file = get_current_file(editorState);
 
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
@@ -41,7 +45,10 @@ export default function CodeEditor(props: CodeEditorProps) {
         return () => window.removeEventListener('keydown', handler);
     }, []);
 
-    const file = get_current_file(editorState);
+    useEffect(() => {
+        if (props.timeLeft > Duration.fromMillis(0)) return;
+        props.submitCode(file.buffer.lines.join('\n'));
+    }, [props.timeLeft]);
 
     const code = file.buffer.lines
         .map((s, i) => i === file.buffer.cursor.y ? (s.slice(0, file.buffer.cursor.x) + '█' + s.slice(Math.max(file.buffer.cursor.x + 1, 0))) : s)

@@ -1,4 +1,4 @@
-import { DateTime, Duration } from 'luxon';
+import { Duration } from 'luxon';
 
 // Components
 import CodeEditor from '@/app/game/[id]/CodeEditor';
@@ -10,12 +10,13 @@ import type { GameConfig } from '@/utils/rules';
 
 type CodePlayerInterfaceProps = {
     config: GameConfig,
-    timeLeft: Duration
+    timeLeft: Duration,
+    submitCode: (c: string) => void
 }
 export default function CodePlayerInterface(props: CodePlayerInterfaceProps) {
     return (
         <div className="flex h-screen">
-            <CodeEditor config={props.config} />
+            <CodeEditor {...props} />
             <Console />
 
             <div className="bg-editor text-white fixed bottom-6 right-6 w-72 flex flex-col px-4 py-3 text-sm rounded select-none hover:bg-white/15 transition duration-150 border border-white/10">

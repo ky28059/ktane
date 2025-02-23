@@ -20,7 +20,7 @@ services:
   frontend:
     build: ./client
     ports:
-      - 3000:3000
+      - 3001:3000
     network_mode: "host"
     extra_hosts:
       - "host.docker.internal:host-gateway"
