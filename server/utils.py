@@ -5,7 +5,7 @@ from enum import IntEnum, StrEnum
 import string
 from dataclasses import dataclass
 
-NSJAIL_HOST = "http://nsjail:5001/"
+NSJAIL_HOST = "http://host.docker.internal:5001/"
 
 POSSIBLE_MODES = [
     "square",

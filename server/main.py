@@ -17,6 +17,8 @@ app = FastAPI()
 # Configure CORS
 origins = [
     "http://localhost:3000",
+    "http://host.docker.internal:3000",
+    "*"
     # TODO: prod endpoint
 ]
 
