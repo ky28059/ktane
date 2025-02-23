@@ -1,5 +1,14 @@
 import { PiHouseBold } from 'react-icons/pi';
-import { GoCheckCircleFill, GoChevronRight, GoFileCode, GoSkip, GoStopwatch, GoXCircleFill } from 'react-icons/go';
+import {
+    GoArrowLeft,
+    GoCheckCircleFill,
+    GoChevronRight, GoCode,
+    GoFileCode, GoGear, GoGitPullRequest, GoGraph, GoIssueOpened, GoLock, GoPlay, GoShield,
+    GoSkip,
+    GoStopwatch, GoTable,
+    GoXCircleFill
+} from 'react-icons/go';
+import { FaGithub } from 'react-icons/fa6';
 
 // Utils
 import type { CodeData, TestData } from '@/app/game/[id]/PlayerInterface';
@@ -20,7 +29,46 @@ export default function ResultsDisplay(props: ResultsDisplayProps) {
 
     return (
         <div className="bg-[#0d1117] h-screen text-white">
-            <div className="px-8 py-16">
+            <header className="bg-black px-4 pt-5 border-b border-white/20">
+                <div className="flex items-center gap-3">
+                    <FaGithub className="text-3xl" />
+                    <p className="text-sm flex items-center gap-2">
+                        KTANE <span className="text-white/50">/</span> prod-repo <GoLock />
+                    </p>
+                </div>
+
+                <div className="flex gap-2 mt-3">
+                    <p className="flex gap-2 items-center p-2 text-sm border-b-2 border-transparent">
+                        <GoCode className="text-white/50 text-base" /> Code
+                    </p>
+                    <p className="flex gap-2 items-center p-2 text-sm border-b-2 border-transparent">
+                        <GoIssueOpened className="text-white/50 text-base" /> Issues
+                    </p>
+                    <p className="flex gap-2 items-center p-2 text-sm border-b-2 border-transparent">
+                        <GoGitPullRequest className="text-white/50 text-base" /> Pull requests
+                    </p>
+                    <p className="flex gap-2 items-center p-2 text-sm border-b-2 border-red-400">
+                        <GoPlay className="text-white/50 text-base" /> Actions
+                    </p>
+                    <p className="flex gap-2 items-center p-2 text-sm border-b-2 border-transparent">
+                        <GoTable className="text-white/50 text-base" /> Projects
+                    </p>
+                    <p className="flex gap-2 items-center p-2 text-sm border-b-2 border-transparent">
+                        <GoShield className="text-white/50 text-base" /> Security
+                    </p>
+                    <p className="flex gap-2 items-center p-2 text-sm border-b-2 border-transparent">
+                        <GoGraph className="text-white/50 text-base" /> Insights
+                    </p>
+                    <p className="flex gap-2 items-center p-2 text-sm border-b-2 border-transparent">
+                        <GoGear className="text-white/50 text-base" /> Settings
+                    </p>
+                </div>
+            </header>
+
+            <div className="px-8 py-12">
+                <p className="text-sm text-white/50 flex items-center gap-1 mb-2">
+                    <GoArrowLeft /> Build
+                </p>
                 <h1 className="font-medium text-xl flex gap-2 items-center">
                     <Icon className={'text-2xl ' + (loading ? 'text-white/50' : failed ? 'text-red-500' : 'text-lime-500')} />
                     deployed to prod 🚀🚀🔥
@@ -58,7 +106,7 @@ export default function ResultsDisplay(props: ResultsDisplayProps) {
                             CI tests & code coverage
                         </h2>
                         <p className="text-white/40 text-sm">
-                            {'succeeded'} 5 seconds ago in 25s
+                            {loading ? 'queued' : failed ? 'failed' : 'succeeded'} 5 seconds ago in 25s
                         </p>
                     </div>
 
@@ -75,7 +123,7 @@ export default function ResultsDisplay(props: ResultsDisplayProps) {
                                 ) : (props.results.all_tests_failed || !props.results.tests[num]) ? (
                                     <GoXCircleFill className="text-red-500 text-xl" />
                                 ) : (
-                                    <GoCheckCircleFill className="text-xl" />
+                                    <GoCheckCircleFill className="text-lime-500 text-xl" />
                                 )}
                                 {name}
                             </div>

@@ -9,7 +9,7 @@ export default function CreateLobbyButton() {
     async function createLobby() {
         const { lobby_id } = await (await fetch(`${process.env.API_BASE}/lobby`, {
             method: 'POST',
-            body: JSON.stringify({ difficulty: 2 })
+            body: JSON.stringify({ difficulty: 0 })
         })).json();
 
         router.push(`/game/${lobby_id}`);
