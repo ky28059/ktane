@@ -11,8 +11,8 @@ export default function ResultsDisplay() {
     return (
         <div className="bg-[#0d1117] h-screen text-white">
             <div className="px-8 py-16">
-                <h1 className="font-medium text-xl flex gap-2">
-                    <Icon className={success ? 'text-lime-500' : 'text-red-500'} />
+                <h1 className="font-medium text-xl flex gap-2 items-center">
+                    <Icon className={'text-2xl ' + (success ? 'text-lime-500' : 'text-red-500')} />
                     deployed to prod 🚀🚀🔥
                     <span className="text-white/40 font-normal">#3147</span>
                 </h1>
@@ -26,7 +26,7 @@ export default function ResultsDisplay() {
                     <h4 className="text-xs text-white/50 px-4 mt-5 mb-3">
                         Jobs
                     </h4>
-                    <div className="py-2 flex gap-1 bg-white/5 rounded px-3 text-sm border-l-3 border-blue-500 font-medium">
+                    <div className="py-2 flex items-center gap-1 bg-white/5 rounded px-3 text-sm border-l-3 border-blue-500 font-medium">
                         <Icon className={success ? 'text-lime-500' : 'text-red-500'} />
                         CI tests & code coverage
                     </div>

@@ -6,7 +6,7 @@ export default function KeybindDocumentation(props: RuleAndTrigger) {
 
     return (
         <div className="flex gap-8 mb-10">
-            <div className="w-36">
+            <div className="w-48">
                 <code className="text-xl bg-black/5 rounded px-2 py-1 h-max">
                     {props.trigger.keypress}
                 </code>
