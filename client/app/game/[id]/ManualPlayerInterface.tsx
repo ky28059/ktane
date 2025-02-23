@@ -67,6 +67,26 @@ export default function ManualPlayerInterface(props: ManualPlayerInterfaceProps)
                     well as expressions and comments in various programming languages.
                 </p>
 
+                <h2 className="font-bold text-xl mb-5" id="intro">
+                    0.1. Parsing this manual
+                </h2>
+                <p className="mb-4">
+                    Each keybind in this manual takes the form:
+                </p>
+                <code className="text-xl bg-black/5 rounded px-2 py-1 h-max">
+                    [CSA]-[key]
+                </code>
+                <p className="mb-4 mt-4">
+                    Where <strong>C</strong>, <strong>S</strong>, or <strong>A</strong> on the left of the divider
+                    corresponds to a need to press <strong>Ctrl/Cmd</strong>, <strong>Shift</strong>, and{' '}
+                    <strong>Alt</strong>, respectively.
+                </p>
+                <p className="mb-12">
+                    On the right, each key is denoted by its <a href="https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code" target="_blank" rel="noopener noreferrer" className="text-[#005090] underline">JavaScript key code</a>.
+                    For example, <strong>k</strong> is denoted by <strong>KeyK</strong>, <strong>9</strong> by
+                    <strong>Digit9</strong>, the enter key by <strong>Enter</strong>, etc.
+                </p>
+
                 <h2 className="font-bold text-xl mb-5" id="layout">
                     1. Editor layout
                 </h2>

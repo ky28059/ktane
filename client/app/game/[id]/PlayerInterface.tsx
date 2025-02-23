@@ -9,7 +9,7 @@ import CodePlayerInterface from '@/app/game/[id]/CodePlayerInterface';
 import ResultsDisplay from '@/app/game/[id]/ResultsDisplay';
 
 // Utils
-import { BinaryOp, GameConfig, StateValue } from '@/utils/rules';
+import type { GameConfig } from '@/utils/rules';
 
 
 type PlayerInterfaceProps = {
@@ -18,7 +18,10 @@ type PlayerInterfaceProps = {
 export default function PlayerInterface(props: PlayerInterfaceProps) {
     const [config, setConfig] = useState<GameConfig | null>(null);
     const [role, setRole] = useState<'manual' | 'coder'>('manual');
+
     const [finished, setFinished] = useState(false);
+    const [codeData, setCodeData] = useState<CodeData['nums'] | null>(null);
+    const [results, setResults] = useState<TestData | null>(null);
 
     const endDate = useRef<DateTime>(DateTime.now());
     const ws = useRef<WebSocket>(null);
@@ -33,10 +36,16 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
             switch (res.type) {
                 case 'start':
                     setConfig({ ...res.config, code: res.code_data.template });
+                    setCodeData(res.code_data.nums);
                     endDate.current = DateTime.fromMillis(res.end_time);
                     break;
                 case 'role':
-                    return setRole(res.data);
+                    setRole(res.data);
+                    break;
+                case 'result':
+                    setFinished(true);
+                    setResults(res.data);
+                    break;
             }
         });
 
@@ -105,7 +114,10 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     )
 
     if (finished) return (
-        <ResultsDisplay />
+        <ResultsDisplay
+            codeData={codeData!}
+            results={results}
+        />
     )
 
     return (
@@ -117,7 +129,7 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
                 loop
             />
             <audio
-                src="/audio/alarm.mp3"
+                src="/audio/alarm-radar.mp3"
                 ref={alarmRef}
             />
 
@@ -134,7 +146,7 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     )
 }
 
-type BackendMessage = RoleMessage | StartMessage
+type BackendMessage = RoleMessage | StartMessage | ResultMessage
 
 type RoleMessage = {
     type: 'role',
@@ -149,13 +161,13 @@ type StartMessage = {
 }
 
 type ResultMessage = {
-    "type": "result",
-    "data": TestData
+    type: 'result',
+    data: TestData
 }
 
 export type TestData = {
-    "all_tests_failed": false,
-    "tests": {"0":false,"1":false,"2":false,"3":false,"4":false}
+    all_tests_failed: boolean,
+    tests: { [key: string]: boolean }
 }
 
 export type CodeData = {
