@@ -32,13 +32,13 @@ class Difficulty(IntEnum):
     HARD = 2
 
 class Color(StrEnum):
-    RED = "rerad"
+    RED = "red"
     GREEN = "green"
     BLUE = "blue"
     PURPLE = "purple"
     BLACK = "black"
 
-ASCII_KEYCODES = [f'Key{l}' for l in string.ascii_letters]
+ASCII_KEYCODES = [f'Key{l}' for l in string.ascii_uppercase]
 NUMBER_KEYCODES = [f'Digit{i}' for i in range(9)]
 F_KEYCODES = [f'F{i}' for i in range(1, 13)]
 SPECIAL_KEYCODES = [
@@ -97,7 +97,7 @@ class Keypress:
 
     @classmethod
     def random(cls):
-        cls(
+        return cls(
             key = cls.random_keycode(),
             ctrl = random.choice([True, False]),
             shift = random.choice([True, False]),
@@ -119,13 +119,13 @@ class Graph:
 
     @classmethod
     def with_nodes(cls, input: List[any]):
-        return cls(map(lambda a: GraphNode(value = a, edges = [])))
-    
+        return cls([GraphNode(value = a, edges = []) for a in input])
+
     def node_count(self):
         return len(self.nodes)
     
     def random_node_index(self):
-        return random.randrange(0, self.node_count() - 1)
+        return random.randrange(0, self.node_count())
 
     # generates random edges until every node is reachable from every other node
     def random_edges_fully_connected(self):
@@ -140,8 +140,8 @@ class Graph:
             while src_index == dst_index:
                 dst_index = self.random_node_index()
             
-            self.nods[src_index].edges.append(dst_index)
-            reachable_sets[src_index] = reachable_sets[src_index] & reachable_sets[dst_index]
+            self.nodes[src_index].edges.append(dst_index)
+            reachable_sets[src_index] = reachable_sets[src_index] | reachable_sets[dst_index]
             if len(reachable_sets[src_index]) == self.node_count():
                 fully_reachable_count += 1
     
@@ -151,12 +151,12 @@ class Graph:
         ))
     
     def edge_list_values(self) -> List[any]:
-        return map(lambda i: self.nodes[i].value, self.edge_list_index())
+        return [(self.nodes[src_i].value, self.nodes[dst_i].value) for src_i, dst_i in self.edge_list_index()]
 
 def generate_bind(difficulty: Difficulty):
     num_modes = 2 * difficulty + 4
 
-    modes = random.choices(POSSIBLE_MODES, k = num_modes)
+    modes = random.sample(POSSIBLE_MODES, num_modes)
     inital_mode = random.choice(modes)
 
     initial_color = random.choice(list(Color))
@@ -211,15 +211,15 @@ def generate_bind(difficulty: Difficulty):
     for src_mode, dst_mode in mode_graph.edge_list_values():
         rules.append({
             'trigger': {'type': 'keypress', 'keypress': Keypress.random().to_key_string()},
-            'rule': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'mode'}, 'rhs': {'type': 'literal', 'val': src_mode}},
+            'test': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'mode'}, 'rhs': {'type': 'literal', 'val': src_mode}},
             'action': {'type': 'change_mode', 'mode': dst_mode},
         })
     
     for src_color, dst_color in color_graph.edge_list_values():
         rules.append({
             'trigger': {'type': 'keypress', 'keypress': Keypress.random().to_key_string()},
-            'rule': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'background'}, 'rhs': {'type': 'literal', 'val': str(src_color)}},
-            'action': {'type': 'change_bg', 'mode': str(dst_color)},
+            'test': {'type': 'bin_op', 'op_type': 'equals', 'lhs': {'type': 'state_value', 'val': 'background'}, 'rhs': {'type': 'literal', 'val': str(src_color)}},
+            'action': {'type': 'change_bg', 'color': str(dst_color)},
         })
 
     # TODO: actual logic of keybind generation
