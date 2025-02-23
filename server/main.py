@@ -14,18 +14,6 @@ DB_COLLECTIONS = get_collections()
 
 app = FastAPI()
 
-origins = [
-    "*"
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Configure CORS
 origins = [
     "http://localhost:3000",
@@ -130,7 +118,7 @@ async def get_lobby(request: Request):
         except Exception as e:
             logging.error(str(e))
             continue
-    
+
 
 @app.websocket("/ws/{lobby_id}")
 async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
@@ -205,7 +193,6 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
             print("Waiting for bro to connect")
             await asyncio.sleep(0.5)  # Use asyncio.sleep instead of time.sleep
             lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
-            pprint(lobby_info)
             if lobby_info["manual_in"] and lobby_info["coder_in"]:
                 break
 
@@ -214,7 +201,6 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
             print("Make sure config is there")
             await asyncio.sleep(0.5)  # Use asyncio.sleep instead of time.sleep
             lobby_info = DB_COLLECTIONS["lobbies"].find_one({"lobby_id": lobby_id})
-            pprint(lobby_info)
             if "config" in lobby_info:
                 break
 
@@ -284,14 +270,3 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
             await websocket.send_json({"error": str(e), "cooked": True})
             await websocket.close(code=1000)
             return
-
-
-# TODO: delete this baseline endpoint after everything works
-
-@app.websocket("/ws/test/{lobby_id}")
-async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
-    await websocket.accept()
-    await websocket.send_json({"message": f"Connected to {lobby_id}"})
-    while True:
-        data = await websocket.receive_text()
-        await websocket.send_json({"message": f"You said: {data}"})

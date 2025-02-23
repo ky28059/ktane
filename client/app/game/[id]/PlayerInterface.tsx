@@ -6,6 +6,7 @@ import { DateTime, Duration } from 'luxon';
 // Components
 import ManualPlayerInterface from '@/app/game/[id]/ManualPlayerInterface';
 import CodePlayerInterface from '@/app/game/[id]/CodePlayerInterface';
+import ResultsDisplay from '@/app/game/[id]/ResultsDisplay';
 
 // Utils
 import { BinaryOp, GameConfig, StateValue } from '@/utils/rules';
@@ -104,9 +105,7 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
     )
 
     if (finished) return (
-        <div className="bg-black flex flex-col gap-2 items-center justify-center h-screen text-white">
-            hello
-        </div>
+        <ResultsDisplay />
     )
 
     return (
@@ -149,8 +148,14 @@ type StartMessage = {
     code_data: CodeData
 }
 
-type FinishMessage = {
-    type: 'finish'
+type ResultMessage = {
+    "type": "result",
+    "data": TestData
+}
+
+export type TestData = {
+    "all_tests_failed": false,
+    "tests": {"0":false,"1":false,"2":false,"3":false,"4":false}
 }
 
 export type CodeData = {
