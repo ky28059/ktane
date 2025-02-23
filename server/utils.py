@@ -78,8 +78,9 @@ SPECIAL_KEYCODES_TYPABLE = [
 
 SPECIAL_KEYCODES_UNTYPABLE = [
     'Backspace',
-    'ShiftLeft',
-    'ShiftRight',
+    # These are impossible to type
+    # 'ShiftLeft',
+    # 'ShiftRight',
     'CapsLock',
     'Home',
     'End',
