@@ -32,6 +32,7 @@ export function parse_config(config: GameConfig): EditorState {
         serial_number: config.serial_number,
         remaining_time: config.total_time,
         type_on_fallback: true,
+        active_filter: null,
         rulebook: rulebook_from_rule_list(config.rules),
     };
 
@@ -384,12 +385,17 @@ export type SetFallbackBehavior = {
     type_char: boolean,
 }
 
+export type SetFilter = {
+    type: 'set_filter',
+    filter_name: string | null,
+}
+
 export type ActionList = {
     type: 'action_list',
     actions: Action[],
 }
 
-export type Action = DieAction | TypeCharsAction | SubmitAction | ChangeBackgroundAction | ChangeModeAction | MoveCursurAction | DeleteAction | BackspaceAction | DoNothingAction | SetFallbackBehavior | ActionList
+export type Action = DieAction | TypeCharsAction | SubmitAction | ChangeBackgroundAction | ChangeModeAction | MoveCursurAction | DeleteAction | BackspaceAction | DoNothingAction | SetFallbackBehavior | SetFilter | ActionList
 
 function do_action(state: RuleEvalContext, action: Action) {
     const buffer = context_get_buffer(state);
@@ -425,8 +431,28 @@ function do_action(state: RuleEvalContext, action: Action) {
         case 'set_fallback':
             state.editor_state.type_on_fallback = action.type_char;
             break;
+        case 'set_filter':
+            if (action.filter_name) {
+                state.editor_state.active_filter = action.filter_name;
+            } else {
+                state.editor_state.active_filter = null;
+            }
+            break;
         case 'action_list':
             action.actions.forEach(action => do_action(state, action));
             break;
+    }
+}
+
+export type TypingFilter = {
+    filter: (val: string) => string,
+}
+
+export const FILTERS: Record<string, TypingFilter> = {
+    uppercase: {
+        filter: (val) => val.toUpperCase(),
+    },
+    lowercase: {
+        filter: (val) => val.toLowerCase(),
     }
 }

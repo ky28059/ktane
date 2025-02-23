@@ -1,4 +1,4 @@
-import { Rulebook } from "./rules";
+import { FILTERS, Rulebook, TypingFilter } from "./rules";
 
 export type BufferPosition = {
     x: number,
@@ -165,10 +165,19 @@ export type EditorState = {
     buffer_index: number,
     serial_number: string,
     remaining_time: number,
-    rulebook: Rulebook,
     type_on_fallback: boolean,
+    active_filter: string | null,
+    rulebook: Rulebook,
 }
 
 export function get_current_file(state: EditorState): OpenFile {
     return state.open_files[state.buffer_index];
+}
+
+export function get_active_filter(state: EditorState): TypingFilter | null {
+    if (state.active_filter) {
+        return FILTERS[state.active_filter];
+    } else {
+        return null;
+    }
 }

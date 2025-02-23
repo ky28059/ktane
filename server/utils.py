@@ -36,6 +36,14 @@ class Modes(StrEnum):
 def mode_allows_typing(mode: Modes) -> bool:
     return mode == Modes.CAPITAL or mode == Modes.INSERT_MODE
 
+def mode_filter(mode: Modes):
+    if mode == Modes.CAPITAL:
+        return 'uppercase'
+    elif mode == Modes.INSERT_MODE:
+        return 'lowercase'
+    else:
+        return None
+
 class Difficulty(IntEnum):
     EASY = 0
     MEDIUM = 1
@@ -276,10 +284,10 @@ def generate_bind(difficulty: Difficulty):
             'trigger': {'type': 'keypress', 'keypress': '-Enter'},
             'action': {'type': 'type_chars', 'characters': '\n'},
         },
-        # {
-        #     'trigger': {'type': 'keypress', 'keypress': '-Delete'},
-        #     'action': {'type': 'delete'},
-        # },
+        {
+            'trigger': {'type': 'keypress', 'keypress': '-Delete'},
+            'action': {'type': 'delete'},
+        },
         # {
         #     'trigger': {'type': 'keypress', 'keypress': '-Backspace'},
         #     'action': {'type': 'backspace'},
@@ -329,10 +337,13 @@ def generate_bind(difficulty: Difficulty):
         else:
             pos_source = 'column_num'
         
+        keypress_modifier = Keypress.random(modifier = True)
+        keypress_modifier.key = keypress.key
+        
         mod_val = random.randrange(2, 8)
 
         rules.append({
-            'trigger': keypress.to_trigger(),
+            'trigger': keypress_modifier.to_trigger(),
             'test': bin_op('equals', bin_op('mod', state_val(pos_source), literal(mod_val)), literal(random.randrange(0, 20) % mod_val)),
             'action': {'type': 'delete'},
         })
@@ -375,14 +386,27 @@ def generate_bind(difficulty: Difficulty):
         })
     
     # navigation keys in navigation mode
-    for keypress in KeyTaker(ALL_KEYS).take(12):
+    for i, keypress in enumerate(KeyTaker(ALL_KEYS).take(4)):
+        x_offset = 0
+        y_offset = 0
+
+        match i:
+            case 0:
+                x_offset = -1
+            case 1:
+                x_offset = 1
+            case 2:
+                y_offset = -1
+            case 3:
+                y_offset = 1
+
         rules.append({
             'trigger': keypress.to_trigger(),
             'test': bin_op('equals', state_val('mode'), literal(str(Modes.NAVIGATION))),
             'action': {
                 'type': 'move_cursor',
-                'x_offset': random.randint(-10, 10),
-                'y_offset': random.randint(-10, 10),
+                'x_offset': x_offset,
+                'y_offset': y_offset,
             },
         })
     
@@ -392,6 +416,14 @@ def generate_bind(difficulty: Difficulty):
             'action': {
                 'type': 'set_fallback',
                 'type_char': mode_allows_typing(mode),
+            },
+        })
+
+        rules.append({
+            'trigger': mode_enter_trigger(mode),
+            'action': {
+                'type': 'set_filter',
+                'filter_name': mode_filter(mode),
             },
         })
 
