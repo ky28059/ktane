@@ -28,13 +28,20 @@ NSJAIL_HOST = "http://host.docker.internal:5001/"
 
 class Modes(StrEnum):
     CAPITAL = "capital mode"
-    VOWEL_MODE = "vowel mode"
     INSERT_MODE = "insert mode"
     # all navigation keys are random
     NAVIGATION = "navigation mode"
 
 def mode_allows_typing(mode: Modes) -> bool:
     return mode == Modes.CAPITAL or mode == Modes.INSERT_MODE
+
+def mode_filter(mode: Modes):
+    if mode == Modes.CAPITAL:
+        return 'uppercase'
+    elif mode == Modes.INSERT_MODE:
+        return 'lowercase'
+    else:
+        return None
 
 class Difficulty(IntEnum):
     EASY = 0
@@ -70,14 +77,16 @@ SPECIAL_KEYCODES_TYPABLE = [
 ]
 
 SPECIAL_KEYCODES_UNTYPABLE = [
-    'Backspace',
-    'ShiftLeft',
-    'ShiftRight',
+    # 'Backspace',
+    # These are impossible to type
+    # 'ShiftLeft',
+    # 'ShiftRight',
     'CapsLock',
     'Home',
     'End',
-    'Insert',
-    'Delete',
+    # Many laptop don't have an insert key
+    # 'Insert',
+    # 'Delete',
     'ArrowUp',
     'ArrowDown',
     'ArrowLeft',
@@ -276,14 +285,14 @@ def generate_bind(difficulty: Difficulty):
             'trigger': {'type': 'keypress', 'keypress': '-Enter'},
             'action': {'type': 'type_chars', 'characters': '\n'},
         },
-        # {
-        #     'trigger': {'type': 'keypress', 'keypress': '-Delete'},
-        #     'action': {'type': 'delete'},
-        # },
-        # {
-        #     'trigger': {'type': 'keypress', 'keypress': '-Backspace'},
-        #     'action': {'type': 'backspace'},
-        # },
+        {
+            'trigger': {'type': 'keypress', 'keypress': '-Delete'},
+            'action': {'type': 'delete'},
+        },
+        {
+            'trigger': {'type': 'keypress', 'keypress': '-Backspace'},
+            'action': {'type': 'backspace'},
+        },
         # {
         #     'trigger': {'type': 'keypress', 'keypress': '-ArrowUp'},
         #     'action': {'type': 'move_cursor', 'x_offset': 0, 'y_offset': -1},
@@ -329,60 +338,39 @@ def generate_bind(difficulty: Difficulty):
         else:
             pos_source = 'column_num'
         
+        keypress_modifier = Keypress.random(modifier = True)
+        keypress_modifier.key = keypress.key
+        
         mod_val = random.randrange(2, 8)
 
         rules.append({
-            'trigger': keypress.to_trigger(),
+            'trigger': keypress_modifier.to_trigger(),
             'test': bin_op('equals', bin_op('mod', state_val(pos_source), literal(mod_val)), literal(random.randrange(0, 20) % mod_val)),
             'action': {'type': 'delete'},
         })
     
-    # vowel mode
-    for i, keypress in enumerate(KeyTaker(TYPABLE_KEYS).take(15)):
-        n = i % 5
-        match i % 5:
-            case 0:
-                letter = 'a'
-            case 1:
-                letter = 'e'
-            case 2:
-                letter = 'i'
-            case 3:
-                letter = 'o'
-            case 4:
-                letter = 'u'
-        
-        if i >= 10:
-            letter = letter.upper()
-        
-        rules.append({
-            'trigger': keypress.to_trigger(),
-            'test': bin_op('equals', state_val('mode'), literal(str(Modes.VOWEL_MODE))),
-            'action': {
-                'type': 'type_chars',
-                'characters': letter,
-            },
-        })
-    
-    # ban vowels in insert mode
-    for letter in 'aeiou':
-        rules.append({
-            'trigger': Keypress(key = letter).to_trigger(),
-            'test': bin_op('not_equals', state_val('mode'), literal(str(Modes.VOWEL_MODE))),
-            'action': {
-                'type': 'do_nothing',
-            },
-        })
-    
     # navigation keys in navigation mode
-    for keypress in KeyTaker(ALL_KEYS).take(12):
+    for i, keypress in enumerate(KeyTaker(ALL_KEYS).take(4)):
+        x_offset = 0
+        y_offset = 0
+
+        match i:
+            case 0:
+                x_offset = -1
+            case 1:
+                x_offset = 1
+            case 2:
+                y_offset = -1
+            case 3:
+                y_offset = 1
+
         rules.append({
             'trigger': keypress.to_trigger(),
             'test': bin_op('equals', state_val('mode'), literal(str(Modes.NAVIGATION))),
             'action': {
                 'type': 'move_cursor',
-                'x_offset': random.randint(-10, 10),
-                'y_offset': random.randint(-10, 10),
+                'x_offset': x_offset,
+                'y_offset': y_offset,
             },
         })
     
@@ -392,6 +380,14 @@ def generate_bind(difficulty: Difficulty):
             'action': {
                 'type': 'set_fallback',
                 'type_char': mode_allows_typing(mode),
+            },
+        })
+
+        rules.append({
+            'trigger': mode_enter_trigger(mode),
+            'action': {
+                'type': 'set_filter',
+                'filter_name': mode_filter(mode),
             },
         })
 

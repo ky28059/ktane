@@ -62,6 +62,11 @@ function actionToString(a: Action): string {
         } else {
             return 'Forbids non mapped characters from being typed.';
         }
+        case 'set_filter': if (a.filter_name) {
+            return `Sets the current filter to ${a.filter_name}.`;
+        } else {
+            return 'Clears the current filter.';
+        }
         case 'action_list': return a.actions.map(actionToString).join(', ');
     }
 }
