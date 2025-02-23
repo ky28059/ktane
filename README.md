@@ -1,5 +1,7 @@
 ![Keep Typing and Nobody Explodes](https://github.com/user-attachments/assets/b82952ad-9fd4-4d8f-a575-78449811932a)
 
+[[devpost](https://devpost.com/software/keep-typing-and-no-one-explodes) | [demo video](https://www.youtube.com/watch?v=czKEi3Z56ns)]
+
 ## Inspiration
 
 Inspired by Keep Talking And Nobody Explodes, two players must work together to finish their provided code samples—one controlling the editor, the other viewing the keybind documentation. Can you pass your test cases before your code is deployed to prod?

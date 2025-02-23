@@ -50,7 +50,7 @@ export default function Home() {
                         command-line editor work again?
                     </p>
                     <p className="mb-5">
-                        Inspired by Keep Talking And No One Explodes, two players must work together to finish their
+                        Inspired by Keep Talking And Nobody Explodes, two players must work together to finish their
                         provided code samples—one controlling the editor, the other viewing the keybind documentation.
                         Can you pass your test cases before your code is deployed to prod?
                     </p>
