@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     env: {
-        API_BASE: `http://localhost:8000`,
-        WS_BASE: `ws://localhost:8000/ws`,
+        API_BASE: `http://ctf.b01lers.com:8000`,
+        WS_BASE: `ws://ctf.b01lers.com:8000/ws`,
     },
     logging: {
         fetches: {
