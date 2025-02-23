@@ -11,7 +11,7 @@ export default function SyntaxHighlighter(props: SyntaxHighlighterProps) {
         <Prism
             language={props.language}
             style={vscDarkPlus}
-            customStyle={{ margin: 0 }}
+            customStyle={{ margin: 0, width: '100%' }}
             codeTagProps={{ style: { fontSize: '16px' } }}
             showLineNumbers
             // useInlineStyles={false}

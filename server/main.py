@@ -225,17 +225,18 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
 
     pprint(lobby_info)
 
-        
-    await websocket.send_json({"type": "start", "end_time": lobby_info["exp"]})
-    await websocket.send_json({"type": "config", "data": config})
-
-    DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"config": config}})
+    # TODO: ensure kevin handles this
 
     code_data = grab_test_data(lobby_info["difficulty"])
 
-    # TODO: ensure kevin handles this 
+    await websocket.send_json({
+        "type": "start",
+        "end_time": lobby_info["exp"],
+        "config": config,
+        "code_data": code_data
+    })
 
-    await websocket.send_json({"type": "code_data", "data": code_data})
+    DB_COLLECTIONS["lobbies"].update_one({"lobby_id": lobby_id}, {"$set": {"config": config}})
 
     # Both players would have to see this while loop to receive start signal
 
