@@ -6,9 +6,12 @@ export default function Console() {
     const [index, setIndex] = useState(0);
 
     useEffect(() => {
-        const id = setInterval(() => {
+        let id = setTimeout(() => {
             setIndex((i) => i + 1);
-        }, 400);
+            setTimeout(() => {
+                id = setInterval(() => setIndex((i) => i + 1), 1000 * 30);
+            }, 1000 * 60);
+        }, 1000);
 
         return () => clearInterval(id);
     }, [])
@@ -33,20 +36,10 @@ const prog = [
 This message is shown once a day. To disable it please create the
 /home/dev/.hushlogin file.
 dev@ktane:~$`,
-    '\nMessage from admin@ktane on pts/220 at 16:04 ...',
-    'Hey, it\'s your manager here... when are you finishing that last test case?',
-    'We have an all hands in 3 minutes...',
-    '',
-    'dev@ktane:~$'
+    '\nMessage from admin@ktane on pts/0 at 16:04 ...\nHey, it\'s your manager here... when are you finishing that last test case?\nWe have an all hands in 3 minutes...\n\ndev@ktane:~$',
+    '\nMessage from nathanielbrooker@ktane on pts/220 at 16:04 ...\nHey man, just checking in. You got this project on lock yet?\n\ndev@ktane:~$',
+    '\nMessage from jacobw@ktane on pts/2 at 16:04 ...\nWe’ll consider discussing a pay adjustment if you can deliver this project on time. Let’s aim to meet the deadline.\n\ndev@ktane:~$',
+    '\nMessage from michelle@ktane on pts/26 at 16:04 ...\nYou free tonight? ;)\n\ndev@ktane:~$',
+    '\nMessage from bob@ktane on pts/26 at 16:04 ...\nHey check out my new website! http://localhost:3000/index.html\n\ndev@ktane:~$',
+    '\nMessage from bob@ktane on pts/26 at 16:04 ...\nWrong chat sorry.\n\ndev@ktane:~$'
 ]
-
-// `Unable to find image 'mongo:latest' locally
-// latest: Pulling from library/mongo
-// 5a7813e071bf: Downloading [=========================================>         ]  24.88MB/29.75MB
-// 07b085c89153: Download complete
-// 8170e4b21000: Downloading [===============>                                   ]  458.8kB/1.508MB
-// 1aa9099a841a: Downloading [==>                                                ]  63.76kB/1.13MB
-// bce7aaa046ee: Waiting
-// a53a70bd8c23: Waiting
-// 9c76b9a0da25: Waiting
-// 990f24c1b076: Waiting`
