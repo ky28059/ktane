@@ -6,23 +6,26 @@ const oswald = Oswald({ subsets: ['latin'] });
 
 export default function Home() {
     return (
-        <div className="pt-16">
-            <div className="container flex flex-col items-center py-8">
-                <img
-                    src="/assets/logo.png"
-                    className="max-w-3xl mx-auto"
-                />
-                <p
-                    className="uppercase text-3xl text-center tracking-tight font-bold mb-6"
-                    style={oswald.style}
-                >
-                    The co-op pair programming party game.
-                </p>
+        <div>
+            <section className="pt-16 bg-[url('/assets/office.jpg')] bg-cover bg-center relative">
+                <div className="absolute inset-0 backdrop-blur-sm" />
+                <div className="relative container flex flex-col items-center py-8">
+                    <img
+                        src="/assets/logo.png"
+                        className="max-w-3xl mx-auto"
+                    />
+                    <p
+                        className="uppercase text-3xl text-center tracking-tight font-bold mb-6"
+                        style={oswald.style}
+                    >
+                        The co-op pair programming party game.
+                    </p>
 
-                <CreateLobbyButton />
-            </div>
+                    <CreateLobbyButton />
+                </div>
+            </section>
 
-            <section className="flex h-72">
+            <section className="flex h-64">
                 <img
                     className="w-1/2 object-cover object-top"
                     src="/assets/coder_view.jpg"
