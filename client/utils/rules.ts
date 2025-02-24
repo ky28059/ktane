@@ -1,4 +1,5 @@
 import { EditorState, BgColor, Mode, BufferState, get_current_file, type_chars, constrain_cursor, delete_char, move_cursor, backspace } from "./editor_state";
+import { DateTime } from "luxon";
 
 // game config returned from server
 export type GameConfig = {
@@ -11,7 +12,7 @@ export type GameConfig = {
     rules: RuleAndTrigger[],
 }
 
-export function parse_config(config: GameConfig): EditorState {
+export function parse_config(config: GameConfig, endDate: DateTime): EditorState {
     const out = {
         open_files: [
             {
@@ -30,7 +31,7 @@ export function parse_config(config: GameConfig): EditorState {
         ],
         buffer_index: 0,
         serial_number: config.serial_number,
-        remaining_time: config.total_time,
+        end_time: endDate,
         type_on_fallback: true,
         active_filter: null,
         rulebook: rulebook_from_rule_list(config.rules),
@@ -247,7 +248,7 @@ function eval_state_value(context: RuleEvalContext, expr: StateValueExpr): Value
         case StateValue.Filename:
             return get_current_file(context.editor_state).filename;
         case StateValue.Timer:
-            return context.editor_state.remaining_time;
+            return Math.floor(context.editor_state.end_time.toMillis() / 1000);
         case StateValue.SerialNumber:
             return context.editor_state.serial_number;
     }
@@ -259,7 +260,8 @@ export enum UnaryOp {
     Negate = 'negate',
     SerialNumberVowelEnd = 'serial_vowel_end',
     SerialNumberNotVowelEnd = 'serial_not_vowel_end',
-    TimerTime = 'timer_time'
+    TimeUnderVal = 'time_under_val',
+    TimeAboveVal = 'time_above_val'
 }
 
 export type UnaryOpExpr = {
@@ -280,9 +282,10 @@ function eval_un_op(context: RuleEvalContext, expr: UnaryOpExpr): Value {
             return /[aeiouAEIOU]$/.test(value_string(val));
         case UnaryOp.SerialNumberNotVowelEnd:
             return !/[aeiouAEIOU]$/.test(value_string(val));
-        case UnaryOp.TimerTime:
-            return context.editor_state.remaining_time > value_num(val);
-
+        case UnaryOp.TimeUnderVal:
+            return context.editor_state.end_time.diff(DateTime.now()).as('minutes') <= value_num(val);
+        case UnaryOp.TimeAboveVal:
+            return context.editor_state.end_time.diff(DateTime.now()).as('minutes') >= value_num(val);
     }
 }
 

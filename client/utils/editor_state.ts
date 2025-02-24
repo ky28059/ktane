@@ -1,4 +1,5 @@
 import { FILTERS, Rulebook, TypingFilter } from "./rules";
+import { DateTime } from "luxon";
 
 export type BufferPosition = {
     x: number,
@@ -164,7 +165,7 @@ export type EditorState = {
     open_files: OpenFile[],
     buffer_index: number,
     serial_number: string,
-    remaining_time: number,
+    end_time: DateTime,
     type_on_fallback: boolean,
     active_filter: string | null,
     rulebook: Rulebook,

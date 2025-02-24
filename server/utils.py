@@ -326,7 +326,7 @@ def generate_bind(difficulty: Difficulty):
 
     # mode keybinds
     for src_mode, dst_mode in mode_graph.edge_list_values():
-        if (difficulty == Difficulty.MEDIUM):
+        if (difficulty == Difficulty.MEDIUM or difficulty == Difficulty.HARD):
             mode_case1 = bin_op('and', \
                         bin_op('equals', state_val('mode'), literal(src_mode)), \
                         bin_op('equals', state_val('background'), literal(random.choice(list(Color)))))
@@ -379,29 +379,68 @@ def generate_bind(difficulty: Difficulty):
         })
     
     # navigation keys in navigation mode
-    for i, keypress in enumerate(KeyTaker(ALL_KEYS).take(4)):
-        x_offset = 0
-        y_offset = 0
+    timer_val = random.randint(1, 4)
+    if (difficulty == Difficulty.MEDIUM or difficulty == Difficulty.HARD):
+        for i, keypress in enumerate(KeyTaker(ALL_KEYS).take(8)):
+            x_offset = 0
+            y_offset = 0
 
-        match i:
-            case 0:
-                x_offset = -1
-            case 1:
-                x_offset = 1
-            case 2:
-                y_offset = -1
-            case 3:
-                y_offset = 1
+            match i:
+                case 0:
+                    x_offset = -1
+                case 1:
+                    x_offset = -1
+                case 2:
+                    x_offset = 1
+                case 3:
+                    x_offset = 1
+                case 4:
+                    y_offset = -1
+                case 5:
+                    y_offset = -1
+                case 6:
+                    y_offset = 1
+                case 7:
+                    y_offset = 1
+            
+            test = bin_op('equals', state_val('mode'), literal(str(Modes.NAVIGATION)))
+            if i % 2 == 0:
+                timer_op = unary_op('time_under_val', literal(timer_val))
+            else:
+                timer_op = unary_op('time_above_val', literal(timer_val))
+                timer_val = random.randint(1, 4)
+            rules.append({
+                'trigger': keypress.to_trigger(),
+                'test': bin_op('and', test, timer_op),
+                'action': {
+                    'type': 'move_cursor',
+                    'x_offset': x_offset,
+                    'y_offset': y_offset,
+                },
+            })
+    else:
+        for i, keypress in enumerate(KeyTaker(ALL_KEYS).take(4)):
+            x_offset = 0
+            y_offset = 0
 
-        rules.append({
-            'trigger': keypress.to_trigger(),
-            'test': bin_op('equals', state_val('mode'), literal(str(Modes.NAVIGATION))),
-            'action': {
-                'type': 'move_cursor',
-                'x_offset': x_offset,
-                'y_offset': y_offset,
-            },
-        })
+            match i:
+                case 0:
+                    x_offset = -1
+                case 1:
+                    x_offset = 1
+                case 2:
+                    y_offset = -1
+                case 3:
+                    y_offset = 1
+            rules.append({
+                'trigger': keypress.to_trigger(),
+                'test': bin_op('equals', state_val('mode'), literal(str(Modes.NAVIGATION))),
+                'action': {
+                    'type': 'move_cursor',
+                    'x_offset': x_offset,
+                    'y_offset': y_offset,
+                },
+            })
     
     for mode in list(Modes):
         rules.append({

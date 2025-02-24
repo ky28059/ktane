@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react';
-import { Duration } from 'luxon';
+import { Duration, DateTime } from 'luxon';
 import { get_active_filter } from '@/utils/editor_state';
 
 // Components
@@ -16,10 +16,11 @@ import { get_current_file, type_chars } from '@/utils/editor_state';
 type CodeEditorProps = {
     config: GameConfig,
     timeLeft: Duration,
+    endDate: DateTime,
     submitCode: (c: string) => void
 }
 export default function CodeEditor(props: CodeEditorProps) {
-    const [editorState, setEditorState] = useState(parse_config(props.config));
+    const [editorState, setEditorState] = useState(parse_config(props.config, props.endDate));
     const file = get_current_file(editorState);
 
     useEffect(() => {
