@@ -49,6 +49,8 @@ export default function CodeEditor(props: CodeEditorProps) {
     }, []);
 
     useEffect(() => {
+        setEditorState((e) => ({ ...e, remaining_ms: props.timeLeft.milliseconds }));
+
         if (props.timeLeft > Duration.fromMillis(0)) return;
         props.submitCode(file.buffer.lines.join('\n'));
     }, [props.timeLeft]);

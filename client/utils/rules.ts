@@ -247,7 +247,7 @@ function eval_state_value(context: RuleEvalContext, expr: StateValueExpr): Value
         case StateValue.Filename:
             return get_current_file(context.editor_state).filename;
         case StateValue.Timer:
-            return context.editor_state.remaining_time;
+            return context.editor_state.remaining_ms;
         case StateValue.SerialNumber:
             return context.editor_state.serial_number;
     }
@@ -281,7 +281,7 @@ function eval_un_op(context: RuleEvalContext, expr: UnaryOpExpr): Value {
         case UnaryOp.SerialNumberNotVowelEnd:
             return !/[aeiouAEIOU]$/.test(value_string(val));
         case UnaryOp.TimerTime:
-            return context.editor_state.remaining_time > value_num(val);
+            return context.editor_state.remaining_ms > value_num(val);
 
     }
 }

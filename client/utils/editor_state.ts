@@ -164,7 +164,7 @@ export type EditorState = {
     open_files: OpenFile[],
     buffer_index: number,
     serial_number: string,
-    remaining_time: number,
+    remaining_ms: number,
     type_on_fallback: boolean,
     active_filter: string | null,
     rulebook: Rulebook,
