@@ -283,9 +283,9 @@ function eval_un_op(context: RuleEvalContext, expr: UnaryOpExpr): Value {
         case UnaryOp.SerialNumberNotVowelEnd:
             return !/[aeiouAEIOU]$/.test(value_string(val));
         case UnaryOp.TimeUnderVal:
-            return (context.editor_state.remaining_ms / 1000) <= value_num(val);
+            return (context.editor_state.remaining_ms / 1000 / 60) <= value_num(val);
         case UnaryOp.TimeAboveVal:
-            return (context.editor_state.remaining_ms / 1000) >= value_num(val);
+            return (context.editor_state.remaining_ms / 1000 / 60) >= value_num(val);
     }
 }
 

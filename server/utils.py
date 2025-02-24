@@ -272,7 +272,6 @@ def generate_bind(difficulty: Difficulty):
     num_modes = 2 * difficulty + 4
 
     modes = [str(mode) for mode in list(Modes)]
-    print(modes, flush=True)
     inital_mode = random.choice(modes)
 
     initial_color = random.choice(list(Color))
