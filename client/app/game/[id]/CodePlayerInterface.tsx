@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react';
-import { Duration, DateTime } from 'luxon';
+import { Duration } from 'luxon';
 
 // Components
 import CodeEditor from '@/app/game/[id]/CodeEditor';
@@ -15,7 +15,6 @@ import type { GameConfig } from '@/utils/rules';
 type CodePlayerInterfaceProps = {
     config: GameConfig,
     timeLeft: Duration,
-    endDate: DateTime,
     submitCode: (c: string) => void
 }
 export default function CodePlayerInterface(props: CodePlayerInterfaceProps) {
