@@ -10,6 +10,7 @@ import time
 from pprint import pprint
 from typing import Dict, List, Optional
 import traceback
+from utils import generate_bind
 from websockets.protocol import State  # Import State to check if it's open
 
 
@@ -116,7 +117,7 @@ async def websocket_endpoint(websocket: WebSocket, lobby_id: str):
                 lobby["game_state"] = {
                     "type": "start",
                     "difficulty": lobby["difficulty"],  # Default difficulty, adjust as needed
-                    "config": generate_bind(0),  # Default difficulty
+                    "config": generate_bind(1),  # Default difficulty
                     "code_data": grab_test_data(0),  # Default difficulty
                     "end_time": int(time.time() + 300) * 1000
                 }

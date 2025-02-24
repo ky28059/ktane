@@ -16,7 +16,7 @@ export default function KeybindDocumentation(props: RuleAndTrigger) {
                     <>
                         <p className="font-bold">Active if:</p>
                         <p className="bg-gray-200 px-4 py-2 rounded mb-3">
-                            {exprToString(props.test)}
+                            The {exprToString(props.test)}
                         </p>
                     </>
                 )}
@@ -78,6 +78,12 @@ function exprToString(a: Expr): string {
             case UnaryOp.Negate:
             case UnaryOp.Not:
                 return `¬${exprToString(a.val)}`
+            case UnaryOp.SerialNumberVowelEnd:
+                return `serial code ends with a vowel`
+            case UnaryOp.SerialNumberNotVowelEnd:
+                return `serial code does not end with a vowel`
+            case UnaryOp.TimerTime:
+                return `Sorry idk how u got this its imposssiibblee!!!`
         }
         case "bin_op": switch (a.op_type) {
             case BinaryOp.Div: return `(${exprToString(a.lhs)} / ${exprToString(a.rhs)})`;
@@ -85,19 +91,19 @@ function exprToString(a: Expr): string {
             case BinaryOp.Mod: return `(${exprToString(a.lhs)} % ${exprToString(a.rhs)})`;
             case BinaryOp.Mul: return `(${exprToString(a.lhs)} * ${exprToString(a.rhs)})`;
             case BinaryOp.Sub: return `(${exprToString(a.lhs)} - ${exprToString(a.rhs)})`;
-            case BinaryOp.Equals: return `${exprToString(a.lhs)} = ${exprToString(a.rhs)}`;
-            case BinaryOp.NotEquals: return `${exprToString(a.lhs)} != ${exprToString(a.rhs)}`;
-            case BinaryOp.Or: return `${exprToString(a.lhs)} OR ${exprToString(a.rhs)}`
-            case BinaryOp.And: return `${exprToString(a.lhs)} AND ${exprToString(a.rhs)}`
+            case BinaryOp.Equals: return `${exprToString(a.lhs)} is ${exprToString(a.rhs)}`;
+            case BinaryOp.NotEquals: return `${exprToString(a.lhs)} is not ${exprToString(a.rhs)}`;
+            case BinaryOp.Or: return `${exprToString(a.lhs)} or the ${exprToString(a.rhs)}`
+            case BinaryOp.And: return `${exprToString(a.lhs)} and the ${exprToString(a.rhs)}`
         }
         case "state_value": switch (a.val) {
-            case StateValue.Background: return 'Background color';
-            case StateValue.ColumnNum: return 'Column number';
-            case StateValue.LineNum: return 'Line number';
-            case StateValue.Mode: return 'Current mode';
-            case StateValue.Timer: return 'Current time';
-            case StateValue.SerialNumber: return 'Serial number';
-            case StateValue.Filename: return 'File name';
+            case StateValue.Background: return 'background color';
+            case StateValue.ColumnNum: return 'column number';
+            case StateValue.LineNum: return 'line number';
+            case StateValue.Mode: return 'current mode';
+            case StateValue.Timer: return 'current time';
+            case StateValue.SerialNumber: return 'serial code';
+            case StateValue.Filename: return 'file name';
         }
     }
 }

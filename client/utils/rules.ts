@@ -257,6 +257,9 @@ function eval_state_value(context: RuleEvalContext, expr: StateValueExpr): Value
 export enum UnaryOp {
     Not = 'not',
     Negate = 'negate',
+    SerialNumberVowelEnd = 'serial_vowel_end',
+    SerialNumberNotVowelEnd = 'serial_not_vowel_end',
+    TimerTime = 'timer_time'
 }
 
 export type UnaryOpExpr = {
@@ -273,6 +276,13 @@ function eval_un_op(context: RuleEvalContext, expr: UnaryOpExpr): Value {
             return !value_bool(val);
         case UnaryOp.Negate:
             return -value_num(val);
+        case UnaryOp.SerialNumberVowelEnd:
+            return /[aeiouAEIOU]$/.test(value_string(val));
+        case UnaryOp.SerialNumberNotVowelEnd:
+            return !/[aeiouAEIOU]$/.test(value_string(val));
+        case UnaryOp.TimerTime:
+            return context.editor_state.remaining_time > value_num(val);
+
     }
 }
 
