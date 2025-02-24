@@ -82,8 +82,10 @@ function exprToString(a: Expr): string {
                 return `serial code ends with a vowel`
             case UnaryOp.SerialNumberNotVowelEnd:
                 return `serial code does not end with a vowel`
-            case UnaryOp.TimerTime:
-                return `Sorry idk how u got this its imposssiibblee!!!`
+            case UnaryOp.TimeUnderVal:
+                return `timer is at or below ${exprToString(a.val)} minutes`
+            case UnaryOp.TimeAboveVal:
+                return `timer is above ${exprToString(a.val)} minutes`
         }
         case "bin_op": switch (a.op_type) {
             case BinaryOp.Div: return `(${exprToString(a.lhs)} / ${exprToString(a.rhs)})`;

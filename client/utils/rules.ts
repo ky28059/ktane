@@ -1,5 +1,6 @@
 import { EditorState, BgColor, Mode, BufferState, get_current_file, type_chars, constrain_cursor, delete_char, move_cursor, backspace } from "./editor_state";
 
+
 // game config returned from server
 export type GameConfig = {
     code: string,
@@ -12,7 +13,7 @@ export type GameConfig = {
 }
 
 export function parse_config(config: GameConfig): EditorState {
-    const out = {
+    const out: EditorState = {
         open_files: [
             {
                 filename: "main.py",
@@ -30,7 +31,7 @@ export function parse_config(config: GameConfig): EditorState {
         ],
         buffer_index: 0,
         serial_number: config.serial_number,
-        remaining_time: config.total_time,
+        remaining_ms: config.total_time,
         type_on_fallback: true,
         active_filter: null,
         rulebook: rulebook_from_rule_list(config.rules),
@@ -247,7 +248,7 @@ function eval_state_value(context: RuleEvalContext, expr: StateValueExpr): Value
         case StateValue.Filename:
             return get_current_file(context.editor_state).filename;
         case StateValue.Timer:
-            return context.editor_state.remaining_ms;
+            return Math.floor(context.editor_state.remaining_ms / 1000);
         case StateValue.SerialNumber:
             return context.editor_state.serial_number;
     }
@@ -259,7 +260,8 @@ export enum UnaryOp {
     Negate = 'negate',
     SerialNumberVowelEnd = 'serial_vowel_end',
     SerialNumberNotVowelEnd = 'serial_not_vowel_end',
-    TimerTime = 'timer_time'
+    TimeUnderVal = 'time_under_val',
+    TimeAboveVal = 'time_above_val'
 }
 
 export type UnaryOpExpr = {
@@ -280,9 +282,10 @@ function eval_un_op(context: RuleEvalContext, expr: UnaryOpExpr): Value {
             return /[aeiouAEIOU]$/.test(value_string(val));
         case UnaryOp.SerialNumberNotVowelEnd:
             return !/[aeiouAEIOU]$/.test(value_string(val));
-        case UnaryOp.TimerTime:
-            return context.editor_state.remaining_ms > value_num(val);
-
+        case UnaryOp.TimeUnderVal:
+            return context.editor_state.remaining_ms <= value_num(val);
+        case UnaryOp.TimeAboveVal:
+            return context.editor_state.remaining_ms >= value_num(val);
     }
 }
 

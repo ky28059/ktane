@@ -148,6 +148,7 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
                 <CodePlayerInterface
                     config={config}
                     timeLeft={timeLeft}
+                    endDate={endDate.current}
                     submitCode={submitCode}
                 />
             )}

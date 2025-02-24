@@ -1,5 +1,6 @@
 import { FILTERS, Rulebook, TypingFilter } from "./rules";
 
+
 export type BufferPosition = {
     x: number,
     y: number,
