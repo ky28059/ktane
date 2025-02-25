@@ -78,14 +78,22 @@ function exprToString(a: Expr): string {
             case UnaryOp.Negate:
             case UnaryOp.Not:
                 return `¬${exprToString(a.val)}`
-            case UnaryOp.SerialNumberVowelEnd:
+            case UnaryOp.SerialVowelEnd:
                 return `serial code ends with a vowel`
-            case UnaryOp.SerialNumberNotVowelEnd:
+            case UnaryOp.SerialNotVowelEnd:
                 return `serial code does not end with a vowel`
             case UnaryOp.TimeUnderVal:
                 return `timer is at or below ${exprToString(a.val)} minutes`
             case UnaryOp.TimeAboveVal:
                 return `timer is above ${exprToString(a.val)} minutes`
+            case UnaryOp.SerialContainsNumber:
+                return `serial code contains a number`
+            case UnaryOp.SerialNotContainsNumber:
+                return `serial code does not contain a number`
+            case UnaryOp.SerialContainsConsecutive:
+                return `serial code contains two consecutive characters`
+            case UnaryOp.SerialNotContainsConsecutive:
+                return `serial code does not contain two consecutive characters`
         }
         case "bin_op": switch (a.op_type) {
             case BinaryOp.Div: return `(${exprToString(a.lhs)} / ${exprToString(a.rhs)})`;
