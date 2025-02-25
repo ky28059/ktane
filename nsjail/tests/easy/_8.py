@@ -1,15 +1,15 @@
 def check(a: str) -> bool:
     return a == a.upper()
 
-NAME = "all_capital_letters"
+NAME = "no_lowercase_letters"
 
 def get_template() -> str:
     return """
 '''
-Return true if a is all capital letters
+Return true if a is not all lowercase
 params: a: str
 returns bool
 '''
-def all_capital_letters(a: str) -> bool:
+def no_lowercase_letters(a: str) -> bool:
     pass
 """
