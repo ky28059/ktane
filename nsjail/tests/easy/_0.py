@@ -10,6 +10,6 @@ Add two numbers
 params: a, b
 returns a + b
 '''
-def add_two_numbers(a: int, b: int):
+def add_two_numbers(a: int, b: int) -> int:
     pass
 """
