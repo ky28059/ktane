@@ -258,8 +258,12 @@ function eval_state_value(context: RuleEvalContext, expr: StateValueExpr): Value
 export enum UnaryOp {
     Not = 'not',
     Negate = 'negate',
-    SerialNumberVowelEnd = 'serial_vowel_end',
-    SerialNumberNotVowelEnd = 'serial_not_vowel_end',
+    SerialVowelEnd = 'serial_vowel_end',
+    SerialNotVowelEnd = 'serial_not_vowel_end',
+    SerialContainsNumber = 'serial_contains_num',
+    SerialNotContainsNumber = 'serial_not_contains_num',
+    SerialContainsConsecutive = 'serial_contains_consecutive', 
+    SerialNotContainsConsecutive = 'serial_not_contains_consecutive',
     TimeUnderVal = 'time_under_val',
     TimeAboveVal = 'time_above_val'
 }
@@ -278,14 +282,22 @@ function eval_un_op(context: RuleEvalContext, expr: UnaryOpExpr): Value {
             return !value_bool(val);
         case UnaryOp.Negate:
             return -value_num(val);
-        case UnaryOp.SerialNumberVowelEnd:
+        case UnaryOp.SerialVowelEnd:
             return /[aeiouAEIOU]$/.test(value_string(val));
-        case UnaryOp.SerialNumberNotVowelEnd:
+        case UnaryOp.SerialNotVowelEnd:
             return !/[aeiouAEIOU]$/.test(value_string(val));
         case UnaryOp.TimeUnderVal:
             return (context.editor_state.remaining_ms / 1000 / 60) <= value_num(val);
         case UnaryOp.TimeAboveVal:
             return (context.editor_state.remaining_ms / 1000 / 60) >= value_num(val);
+        case UnaryOp.SerialContainsNumber:
+            return /[0-9]/.test(value_string(val));
+        case UnaryOp.SerialNotContainsNumber:
+            return !/[0-9]/.test(value_string(val));
+        case UnaryOp.SerialContainsConsecutive:
+            return /(.)\1/.test(value_string(val));
+        case UnaryOp.SerialNotContainsConsecutive:
+            return !/(.)\1/.test(value_string(val));
     }
 }
 

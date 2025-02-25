@@ -27,6 +27,12 @@ NSJAIL_HOST = "http://host.docker.internal:5001/"
 #     "canada",
 # ]
 
+SERIAL_NUMBER_CASES: dict = [
+    ('serial_vowel_end','serial_not_vowel_end'),
+    ('serial_contains_num','serial_not_contains_num'),
+    ('serial_contains_consecutive', 'serial_not_contains_consecutive')
+]
+
 class Modes(StrEnum):
     CAPITAL = "capital mode"
     INSERT_MODE = "insert mode"
@@ -172,6 +178,16 @@ class Keypress:
 
 def generate_serial_number():
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(12))
+
+# generates two random rules relating to serial number
+def generate_serial_rule() -> tuple[dict, dict]:
+    op, inv_op = random.choice(SERIAL_NUMBER_CASES)
+    op: str
+    inv_op: str
+    op: dict = unary_op(op, state_val('serial_number'))
+    inv_op:dict = unary_op(inv_op, state_val('serial_number'))
+    return (op, inv_op)
+
 
 @dataclass
 class GraphNode:
@@ -329,8 +345,7 @@ def generate_bind(difficulty: Difficulty):
             mode_case1 = bin_op('and', \
                         bin_op('equals', state_val('mode'), literal(src_mode)), \
                         bin_op('equals', state_val('background'), literal(random.choice(list(Color)))))
-            serial_case = unary_op('serial_vowel_end', state_val('serial_number'))
-            inv_serial_case = unary_op('serial_not_vowel_end', state_val('serial_number'))
+            serial_case, inv_serial_case = generate_serial_rule()
             rules.append({
                 'trigger': Keypress.random().to_trigger(),
                 'test': bin_op('and', mode_case1, serial_case),
