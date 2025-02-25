@@ -91,9 +91,9 @@ function exprToString(a: Expr): string {
             case UnaryOp.SerialNotContainsNumber:
                 return `serial code does not contain a number`
             case UnaryOp.SerialContainsConsecutive:
-                return `serial code contains two consecutive characters`
+                return `serial code contains two identical consecutive characters`
             case UnaryOp.SerialNotContainsConsecutive:
-                return `serial code does not contain two consecutive characters`
+                return `serial code does not contain two identical consecutive characters`
         }
         case "bin_op": switch (a.op_type) {
             case BinaryOp.Div: return `(${exprToString(a.lhs)} / ${exprToString(a.rhs)})`;
