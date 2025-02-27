@@ -143,7 +143,10 @@ export default function PlayerInterface(props: PlayerInterfaceProps) {
             />
 
             {role === 'manual' ? (
-                <ManualPlayerInterface config={config} />
+                <ManualPlayerInterface 
+                    config={config}
+                    timeLeft={timeLeft}
+                />
             ) : (
                 <CodePlayerInterface
                     config={config}
