@@ -3,6 +3,8 @@ import type { GameConfig } from '@/utils/rules';
 import { Duration } from "luxon";
 import { useEffect, useRef, useState } from 'react';
 import TermsOfService from '@/app/game/[id]/TermsOfService';
+import Clippy from '@/app/game/[id]/Clippy';
+
 
 
 type ManualPlayerInterfaceProps = {
@@ -14,6 +16,9 @@ export default function ManualPlayerInterface(props: ManualPlayerInterfaceProps)
     const [showTOS, setShowTOS] = useState(false);
     const openedTOS = useRef(false);
 
+    const [showClippy, setShowClippy] = useState(false);
+    const openedClippy = useRef(false);
+
     useEffect(() => {
         if (openedTOS.current) return;
         if (props.timeLeft > Duration.fromMillis(1000 * 60 * 4)) return; //should be 4 minutes in
@@ -22,9 +27,18 @@ export default function ManualPlayerInterface(props: ManualPlayerInterfaceProps)
         openedTOS.current = true;
     }, [props.timeLeft]);
 
+    useEffect(() => {
+        if (openedClippy.current) return;
+        if (props.timeLeft > Duration.fromMillis(1000 * 60 * 2)) return;
+
+        setShowClippy(true);
+        openedClippy.current = true;
+    }, [props.timeLeft]);
+
     return (
         <div className="bg-gray-200 text-black">
-            {showTOS && <TermsOfService setOpen={setShowTOS} />}
+            { showTOS && <TermsOfService setOpen={setShowTOS} />}
+            {showClippy && <Clippy setOpen={setShowClippy}/>}
             <div className="container font-serif py-16 max-w-6xl bg-white border-x border-black/20">
                 <h1 className="font-bold text-4xl mb-6">
                     The Scame Editor
