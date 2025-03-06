@@ -5,8 +5,6 @@ import { useEffect, useRef, useState } from 'react';
 import TermsOfService from '@/app/game/[id]/TermsOfService';
 import Clippy from '@/app/game/[id]/Clippy';
 
-
-
 type ManualPlayerInterfaceProps = {
     config: GameConfig,
     timeLeft: Duration,
@@ -29,7 +27,7 @@ export default function ManualPlayerInterface(props: ManualPlayerInterfaceProps)
 
     useEffect(() => {
         if (openedClippy.current) return;
-        if (props.timeLeft > Duration.fromMillis(1000 * 60 * 4 + 58*1000)) return;
+        if (props.timeLeft > Duration.fromMillis(1000 * 60 * 2)) return; // two minutes in
 
         setShowClippy(true);
         openedClippy.current = true;
@@ -37,8 +35,8 @@ export default function ManualPlayerInterface(props: ManualPlayerInterfaceProps)
 
     return (
         <div className="bg-gray-200 text-black">
-            {/* { showTOS && <TermsOfService setOpen={setShowTOS} />} */}
-            {showClippy && <Clippy setOpen={setShowClippy}/>}
+            { showTOS && <TermsOfService setOpen={setShowTOS}/> }
+            { showClippy && <Clippy setOpen={setShowClippy}/> }
             <div className="container font-serif py-16 max-w-6xl bg-white border-x border-black/20">
                 <h1 className="font-bold text-4xl mb-6">
                     The Scame Editor
