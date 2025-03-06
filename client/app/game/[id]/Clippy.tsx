@@ -31,6 +31,9 @@ export default function Clippy(props: ClippyProps) {
                     }}/>
                 <label htmlFor="clippycheck" className="mb-1 ml-1">Dont show me this tip again.</label>
             </div>
+            <div className="bg-black clippy-triangle h-8 w-5 ml-10 shadow-md pr-[12.2%] -mt-[0.6%]">
+                <div className="bg-[#ffffd1] clippy-triangle h-[90%] w-5 "></div>
+            </div>
             <img src="/assets/clippy.webp" alt="test" className="p-3" />
         </div>
     )
